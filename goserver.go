@@ -10,20 +10,16 @@ import (
 )
 
 type Handler struct {
-	writer io.Writer
+	writer *os.File
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	go func() {
-		h.writer.Write([]byte("Hello"))
-
-		// fmt.Println(ioutil.ReadAll(reader))
-	}()
-
-	cmd := exec.Command("./gorack", "./config.ru", "/tmp/123.sock")
+	cmd := exec.Command("./gorack", "./config.ru")
 
 	out, err := cmd.StdoutPipe()
+
+	cmd.ExtraFiles = []*os.File{h.writer}
 
 	if err != nil {
 		fmt.Println(err)
@@ -46,13 +42,20 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	_, writer := io.Pipe()
+	// writer, err := os.OpenFile("/tmp/123.sock", os.O_RDWR|os.O_CREATE, 0777)
+	//
+	reader, writer, err := os.Pipe()
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	go func() {
-		writer.Write([]byte("hello\n"))
-		writer.Close()
+		for {
+			writer.Write([]byte("it works\n"))
+		}
 	}()
 
-	handler := &Handler{writer}
+	handler := &Handler{reader}
 	http.ListenAndServe("localhost:3001", handler)
 }
