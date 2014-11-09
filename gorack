@@ -1,9 +1,11 @@
 #!/usr/bin/env ruby
 # vim: set ft=ruby:
 
-require_relative './goserver'
+require_relative './gorack'
 
-Gorack::Server.run(ARGV[0], file: ARGV[1])
+puts ARGV
+
+Gorack::Rack.run(ARGV[0], io: ARGV[1])
 
 
 
