@@ -3,12 +3,13 @@ require 'socket'
 require 'stringio'
 require 'rack'
 require 'rack/builder'
+require 'json'
 
 module Gorack
   class Rack
     def self.run(*args)
       s = new(*args)
-      # s.handle
+      s.handle
     end
 
     attr_accessor :config, :app, :file
@@ -17,15 +18,17 @@ module Gorack
 
     def initialize(config, options = {})
       self.config = config
-      self.file   = options[:file]
-      self.ppid   = Process.ppid
 
-      @io = IO.open(options[:io].to_i)
-      puts "Reading from #{io.fileno}"
 
-      puts io.gets
+      rfd, wfd = Integer(options[:reader]), Integer(options[:writer])
 
-      # at_exit { close }
+      ObjectSpace.each_object(IO) do |o|
+        # o.to_i unless o.closed?
+        o
+      end
+
+      @reader = IO.open(3)
+      @writer = IO.open(4)
 
       trap('TERM') { exit }
       trap('INT')  { exit }
@@ -52,16 +55,14 @@ module Gorack
       headers = { 'Content-Type' => 'text/html' }
       body    = ["Internal Server Error"]
 
-      env, input = nil, StringIO.new
-      input.set_encoding('ASCII-8BIT') if input.respond_to?(:set_encoding)
+      req = StringIO.new
+      IO.copy_stream(@reader, req)
 
-      env = ::JSON.parse(io.read)
-
-      input.rewind
+      env = ::JSON.parse(req.string)
 
       env = {
-        "rack.version" => Rack::VERSION,
-        "rack.input" => input,
+        "rack.version" => 1,
+        "rack.input" => StringIO.new,
         "rack.errors" => $stderr,
         "rack.multithread" => false,
         "rack.multiprocess" => true,
@@ -69,7 +70,19 @@ module Gorack
         "rack.url_scheme" => ["yes", "on", "1"].include?(env["HTTPS"]) ? "https" : "http"
       }.merge(env)
 
+      app = load_config
+
       status, headers, body = app.call(env)
+
+      # puts status, headers, body
+
+      @writer.write(::JSON.dump({
+        status: status,
+        headers: headers,
+        body: body,
+      }))
+
+      @writer.close
     end
   end
 end

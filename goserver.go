@@ -22,11 +22,25 @@ type RackRequest struct {
 }
 
 type Handler struct {
-	reader *os.File
-	writer *os.File
+	clientReader *os.File
+	clientWriter *os.File
+	serverWriter *os.File
+	serverReader *os.File
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	clientReader, serverWriter, err := os.Pipe()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	serverReader, clientWriter, err := os.Pipe()
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	rr := RackRequest{
 		REQUEST_METHOD: r.Method,
@@ -37,26 +51,21 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		SERVER_PORT:    "80",
 	}
 
-	js, err := json.Marshal(rr)
+	jsonData, err := json.Marshal(rr)
 
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
 
-	fmt.Println(js)
+	serverWriter.Write(jsonData)
+	serverWriter.Close()
 
-	h.writer.Write(js)
-	h.writer.Write([]byte("\n"))
-
-	fmt.Println(string(h.reader.Fd()))
-
-	cmd := exec.Command("./gorack", "./config.ru", strconv.Itoa(int(h.reader.Fd())))
-	// cmd := exec.Command("bash", "./config.ru")
+	cmd := exec.Command("./gorack", "./config.ru", strconv.Itoa(int(clientReader.Fd())), strconv.Itoa(int(clientWriter.Fd())))
 
 	out, err := cmd.StdoutPipe()
 
-	cmd.ExtraFiles = []*os.File{h.reader}
+	cmd.ExtraFiles = []*os.File{clientReader, clientWriter}
 
 	if err != nil {
 		fmt.Println(err)
@@ -75,18 +84,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err = cmd.Wait()
 	log.Printf("Command finished with error: %v", err)
 
+	// var d *map[string]string
+	//
+	// json.Unmarshall(h.serverReader, &d)
+	//
+	io.Copy(w, serverReader)
 }
 
 func main() {
 
 	// writer, err := os.OpenFile("/tmp/123.sock", os.O_RDWR|os.O_CREATE, 0777)
 	//
-	reader, writer, err := os.Pipe()
 
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	handler := &Handler{reader, writer}
+	handler := &Handler{}
 	http.ListenAndServe("localhost:3001", handler)
 }
