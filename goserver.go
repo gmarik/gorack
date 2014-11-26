@@ -84,10 +84,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err = cmd.Wait()
 	log.Printf("Command finished with error: %v", err)
 
-	// var d *map[string]string
-	//
-	// json.Unmarshall(h.serverReader, &d)
-	//
 	io.Copy(w, serverReader)
 }
 

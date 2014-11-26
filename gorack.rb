@@ -76,13 +76,14 @@ module Gorack
 
       # puts status, headers, body
 
-      @writer.write(::JSON.dump({
-        status: status,
-        headers: headers,
-        body: body,
-      }))
-
+      @writer.write( "#{status}\n")
+      @writer.write(headers.map {|k, v| "#{k}: #{v}"}.join("\n"))
+      @writer.write("\n\n")
+      # IO.copy_stream(body, @writer)
+      @writer.write(body.join)
       @writer.close
     end
   end
+
+
 end
