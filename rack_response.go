@@ -5,28 +5,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"reflect"
 	"strconv"
 	"strings"
-	"testing"
 )
-
-const (
-	response = `200
-Server: nginx/1.6.0
-Content-Type: text/html
-Content-Length: 0
-Last-Modified: Sat, 06 Sep 2014 15:37:58 GMT
-Date: Wed, 26 Nov 2014 23:49:32 GMT
-Connection: keep-alive
-Set-Cookie: UserID=JohnDoe; Max-Age=3600; Version=1
-
-hello world!
-`
-)
-
-const MAX_HEADERS_SIZE = 512 * 16 * 1024 // 256 * 16K
 
 type RackResponse struct {
 	rackResponse io.Reader
@@ -36,6 +17,10 @@ type RackResponse struct {
 
 	buf         *bytes.Buffer
 	headersSize uint
+}
+
+func NewResponse(r io.Reader) *RackResponse {
+	return &RackResponse{rackResponse: r}
 }
 
 func (r *RackResponse) Parse() error {
@@ -128,44 +113,4 @@ func (r *RackResponse) ParseHeaders() error {
 	}
 
 	return nil
-}
-
-func NewReader(r io.Reader) *RackResponse {
-	return &RackResponse{rackResponse: r}
-}
-
-func TestResponseParse(t *testing.T) {
-	r := NewReader(strings.NewReader(response))
-
-	result := map[string][]string{
-		"Server":         []string{"nginx/1.6.0"},
-		"Content-Type":   []string{"text/html"},
-		"Content-Length": []string{"0"},
-		"Last-Modified":  []string{"Sat, 06 Sep 2014 15:37:58 GMT"},
-		"Date":           []string{"Wed, 26 Nov 2014 23:49:32 GMT"},
-		"Connection":     []string{"keep-alive"},
-		"Set-Cookie":     []string{"UserID=JohnDoe", "Max-Age=3600", "Version=1"},
-	}
-
-	if err := r.Parse(); err != nil {
-		t.Error(err)
-	}
-
-	if !reflect.DeepEqual(r.Headers, result) {
-		t.Errorf("\nExp %s,\nGot %s", result, r.Headers)
-	}
-
-	if r.Body == nil {
-		t.Errorf("r.Body can't be nil")
-	}
-
-	body, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	if reflect.DeepEqual(string(body), "hello world!") {
-		t.Errorf("\nGot %s", string(body))
-	}
 }
