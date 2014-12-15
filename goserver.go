@@ -90,8 +90,6 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(resp.StatusCode)
-
 	for name, values := range resp.Headers {
 		for _, val := range values {
 			// fmt.Println(name, val)
@@ -99,7 +97,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// log.Println("Writing Body")
+	w.WriteHeader(resp.StatusCode)
 
 	_, err = io.Copy(w, resp.Body)
 
