@@ -19,35 +19,16 @@ module Gorack
     def initialize(config, options = {})
       self.config = config
 
-
-      rfd, wfd = Integer(options[:reader]), Integer(options[:writer])
-
-      ObjectSpace.each_object(IO) do |o|
-        # o.to_i unless o.closed?
-        o
-      end
-
-      @reader = IO.open(3)
-      @writer = IO.open(4)
+      @reader, @writer = IO.open(3), IO.open(4)
 
       trap('TERM') { exit }
       trap('INT')  { exit }
       trap('QUIT') { close }
-
     end
 
     def load_config
       cfgfile = File.read(config)
       eval("Rack::Builder.new {( #{cfgfile}\n )}.to_app", TOPLEVEL_BINDING, config)
-    end
-
-    def load_json
-      load_json!
-    rescue LoadError
-    end
-
-    def load_json!
-      require 'json' unless defined? ::JSON
     end
 
     def handle
@@ -76,14 +57,15 @@ module Gorack
 
       # puts status, headers, body
 
-      @writer.write( "#{status}\n")
+      @writer.write("#{status}\n")
       @writer.write(headers.map {|k, v| "#{k}: #{v}"}.join("\n"))
       @writer.write("\n\n")
+      # TODO:
       # IO.copy_stream(body, @writer)
       @writer.write(body.join)
+      @reader.close
       @writer.close
+      # puts 'Done'
     end
   end
-
-
 end
