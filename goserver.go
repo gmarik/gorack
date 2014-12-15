@@ -8,7 +8,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"strconv"
+
+	"./gorack"
 )
 
 type RackRequest struct {
@@ -54,25 +55,24 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := json.Marshal(rr)
 
 	if err != nil {
-		w.WriteHeader(500)
-		return
+		log.Fatal(err)
 	}
 
 	serverWriter.Write(jsonData)
 	serverWriter.Close()
 
-	cmd := exec.Command("./gorack", "./config.ru", strconv.Itoa(int(clientReader.Fd())), strconv.Itoa(int(clientWriter.Fd())))
+	cmd := exec.Command("./gorack.sh", "./config.ru")
 
 	out, err := cmd.StdoutPipe()
 
+	// child process' FDs start from 2+1
 	cmd.ExtraFiles = []*os.File{clientReader, clientWriter}
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	err = cmd.Start()
-	if err != nil {
+	if err = cmd.Start(); err != nil {
 		log.Fatal(err)
 	}
 
@@ -84,7 +84,30 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err = cmd.Wait()
 	log.Printf("Command finished with error: %v", err)
 
-	io.Copy(w, serverReader)
+	resp := gorack.NewResponse(io.TeeReader(serverReader, os.Stdout))
+	// resp := gorack.NewResponse(serverReader)
+
+	if err := resp.Parse(); err != nil {
+		log.Println("Error:", err.Error())
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+
+	w.WriteHeader(resp.StatusCode)
+
+	// fmt.Println(resp.Headers)
+
+	for name, values := range resp.Headers {
+		for _, val := range values {
+			w.Header().Add(name, val)
+		}
+	}
+
+	// log.Println("Writing Body")
+
+	io.Copy(w, resp.Body)
+
+	// log.Println("Done")
 }
 
 func main() {

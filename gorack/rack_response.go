@@ -1,7 +1,6 @@
 package gorack
 
 import (
-	"bufio"
 	"bytes"
 	"io"
 	"strconv"
@@ -33,10 +32,11 @@ func (r *RackResponse) Parse() error {
 	// at some point reader reader reaches the body
 	r.Body = reader
 
-	// end of headers, end of line
-	eol, eoh := false, false
 	// read char by char to correctly land at body start
 	char := make([]byte, 1, 1)
+
+	// end of headers, end of line
+	eol, eoh := false, false
 
 	for {
 		n, err := reader.Read(char)
@@ -72,12 +72,6 @@ func (r *RackResponse) ParseHeaders() error {
 	// reads headers based on previously determined r.headersSize
 	headers := make([]byte, r.headersSize, r.headersSize)
 	_, err := r.buf.Read(headers)
-
-	if err != nil {
-		return err
-	}
-
-	// fmt.Println(string(headers))
 
 	if err != nil {
 		return err

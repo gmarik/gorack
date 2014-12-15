@@ -1,7 +1,10 @@
 package gorack
 
 import (
+	"bytes"
+	"io"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -17,8 +20,13 @@ Date: Wed, 26 Nov 2014 23:49:32 GMT
 Connection: keep-alive
 Set-Cookie: UserID=JohnDoe; Max-Age=3600; Version=1
 
-hello world!
-`
+hello world!`
+
+	response2 = `200
+X-This: a messsage
+Content-Length: 5
+
+hello`
 )
 
 func TestResponseParse(t *testing.T) {
@@ -50,13 +58,40 @@ func TestResponseParse(t *testing.T) {
 		t.Errorf("response Body can't be nil")
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	buf := &bytes.Buffer{}
+
+	// copy body into buffer
+	// just uses "streaming"
+	io.Copy(buf, r.Body)
+
+	body, err := ioutil.ReadAll(buf)
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	if reflect.DeepEqual(string(body), "hello world!") {
-		t.Errorf("\nGot %s", string(body))
+	exp := "hello world!"
+
+	if !reflect.DeepEqual(string(body), exp) {
+		t.Errorf("\nExp %s\nGot %s", exp, string(body))
+	}
+}
+
+func TestReponse2(t *testing.T) {
+	read, write, err := os.Pipe()
+
+	write.Write([]byte(response2))
+	write.Close()
+
+	r := NewResponse(read)
+
+	if err := r.Parse(); err != nil {
+		t.Error(err)
+	}
+
+	_, err = ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		t.Error(err)
 	}
 }
