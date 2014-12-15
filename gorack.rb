@@ -63,7 +63,6 @@ module Gorack
       # TODO:
       # IO.copy_stream(body, @writer)
       @writer.write(body.join)
-      @reader.close
       @writer.close
       # puts 'Done'
     end

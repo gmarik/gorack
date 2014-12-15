@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -22,14 +21,7 @@ type RackRequest struct {
 	HTTP_vars      []string
 }
 
-type Handler struct {
-	clientReader *os.File
-	clientWriter *os.File
-	serverWriter *os.File
-	serverReader *os.File
-}
-
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	clientReader, serverWriter, err := os.Pipe()
 
@@ -69,7 +61,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cmd.ExtraFiles = []*os.File{clientReader, clientWriter}
 
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 
 	if err = cmd.Start(); err != nil {
@@ -84,8 +76,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err = cmd.Wait()
 	log.Printf("Command finished with error: %v", err)
 
-	resp := gorack.NewResponse(io.TeeReader(serverReader, os.Stdout))
-	// resp := gorack.NewResponse(serverReader)
+	// resp := gorack.NewResponse(io.TeeReader(serverReader, os.Stdout))
+	resp := gorack.NewResponse(serverReader)
 
 	if err := resp.Parse(); err != nil {
 		log.Println("Error:", err.Error())
@@ -95,26 +87,24 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(resp.StatusCode)
 
-	// fmt.Println(resp.Headers)
-
 	for name, values := range resp.Headers {
 		for _, val := range values {
+			// fmt.Println(name, val)
 			w.Header().Add(name, val)
 		}
 	}
 
 	// log.Println("Writing Body")
 
-	io.Copy(w, resp.Body)
+	_, err = io.Copy(w, resp.Body)
 
-	// log.Println("Done")
+	if err != nil {
+		log.Println(err.Error())
+	}
 }
 
 func main() {
 
-	// writer, err := os.OpenFile("/tmp/123.sock", os.O_RDWR|os.O_CREATE, 0777)
-	//
-
-	handler := &Handler{}
-	http.ListenAndServe("localhost:3001", handler)
+	http.HandleFunc("/", ServeHTTP)
+	http.ListenAndServe("localhost:3001", nil)
 }
