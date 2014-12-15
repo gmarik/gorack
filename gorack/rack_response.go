@@ -30,7 +30,7 @@ func (r *RackResponse) Parse() error {
 	reader := io.TeeReader(r.rackResponse, r.buf)
 
 	// at some point reader reader reaches the body
-	r.Body = reader
+	r.Body = r.rackResponse
 
 	// read char by char to correctly land at body start
 	char := make([]byte, 1, 1)
