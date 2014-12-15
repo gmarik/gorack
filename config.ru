@@ -3,4 +3,4 @@ headers = {
   'Content-Length' => 5,
 }
 
-run lambda {|env| [200, headers, ["hello"]]}
+run lambda {|env| [201, headers, ["hello"]]}
