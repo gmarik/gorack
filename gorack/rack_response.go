@@ -59,14 +59,14 @@ func (r *RackResponse) Parse() error {
 
 	// fmt.Println("Read ", r.headersSize, " bytes")
 
-	if err := r.ParseHeaders(); err != nil {
+	if err := r.parseHeaders(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (r *RackResponse) ParseHeaders() error {
+func (r *RackResponse) parseHeaders() error {
 	var delim = byte('\n')
 
 	// reads headers based on previously determined r.headersSize
