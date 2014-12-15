@@ -76,6 +76,11 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err = cmd.Wait()
 	log.Printf("Command finished with error: %v", err)
 
+	// REQUIRED: parent process needs to close FDs
+	// after child accepted and opened
+	clientReader.Close()
+	clientWriter.Close()
+
 	// resp := gorack.NewResponse(io.TeeReader(serverReader, os.Stdout))
 	resp := gorack.NewResponse(serverReader)
 
