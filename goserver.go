@@ -57,7 +57,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	out, err := cmd.StdoutPipe()
 
-	// child process' FDs start from 2+1
+	// child process' FDs start from 3 (0, 1, 2)
 	cmd.ExtraFiles = []*os.File{clientReader, clientWriter}
 
 	if err != nil {
