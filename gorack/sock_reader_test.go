@@ -1,5 +1,8 @@
 package gorack
 
+// run with -v to see debug output:
+// go test -v gorack/sock_reader_test.go
+
 import (
 	"fmt"
 	"io"
