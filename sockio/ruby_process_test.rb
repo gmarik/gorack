@@ -9,13 +9,13 @@ end
 sock = UNIXSocket.for_fd(3)
 
 log "receiving socket"
-r = sock.recv_io
+remote_r = sock.recv_io
 
 log "creating proxy pipe"
-ior, iow = IO.pipe
+local_r, local_w = IO.pipe
 
 log "sending the pipe"
-sock.send_io(ior)
+sock.send_io(local_r)
 
 log "copying stream"
-IO.copy_stream(r, iow)
+IO.copy_stream(remote_r, local_w)
