@@ -25,15 +25,17 @@ end
 # passed from parent process
 sock = UNIXSocket.for_fd(3)
 
-log "Creating socket"
-r,w = IO.pipe
+log "receiving socket"
+r = sock.recv_io
 
-log "sending some data"
-sock.send_io(r)
+log "creating proxy pipe"
+ior, iow = IO.pipe
 
-w.write("hello")
-w.close
-r.close
+log "sending the pipe"
+sock.send_io(ior)
+
+log "copying stream"
+IO.copy_stream(r, iow)
 `
 
 var rubyProcessFile *os.File
@@ -59,6 +61,8 @@ func TestSocketReading(t *testing.T) {
 	fmt.Println("Creating Socket")
 	pair, err := syscall.Socketpair(syscall.AF_LOCAL, syscall.SOCK_STREAM, 0)
 
+	var reader, writer = pair[0], pair[1]
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,7 +78,7 @@ func TestSocketReading(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	fd := os.NewFile(uintptr(pair[0]), "writer")
+	fd := os.NewFile(uintptr(reader), "writer")
 
 	// child process' FDs start from 3 (0, 1, 2)
 	cmd.ExtraFiles = []*os.File{fd}
@@ -88,79 +92,77 @@ func TestSocketReading(t *testing.T) {
 	go io.Copy(os.Stdout, out)
 	go io.Copy(os.Stderr, errout)
 
-	quit := make(chan struct{})
+	response := make(chan string)
 
-	go func() {
-		defer close(quit)
-		reader := os.NewFile(uintptr(pair[1]), "reader")
+	expected := "hello"
 
-		// from: https://github.com/ftrvxmtrx/fd/blob/master/fd.go
-		// recvmsg
-		buf := make([]byte, syscall.CmsgSpace(4))
-		_, _, _, _, err = syscall.Recvmsg(int(reader.Fd()), nil, buf, syscall.MSG_WAITALL)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// parse control msgs
-		var msgs []syscall.SocketControlMessage
-		msgs, err = syscall.ParseSocketControlMessage(buf)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		filenames := []string{"result"}
-
-		// convert fds to files
-		res := make([]*os.File, 0, len(msgs))
-
-		for _, msg := range msgs {
-			var fds []int
-			fds, err = syscall.ParseUnixRights(&msg)
-
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-
-			for fi, fd := range fds {
-				var filename string
-				if fi < len(filenames) {
-					filename = filenames[fi]
-				}
-
-				res = append(res, os.NewFile(uintptr(fd), filename))
-			}
-		}
-
-		file := res[0]
-
-		log.Println(res)
-
-		fmt.Println("Reading data")
-
-		data := make([]byte, 100)
-
-		n, err := file.Read(data)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		received, expected := data[0:n], []byte("hello")
-
-		if !reflect.DeepEqual(received, expected) {
-			t.Errorf("\nGot: %s\nExp: %s", received, expected)
-		}
-	}()
+	go processEcho(writer, response, expected, t)
 
 	err = cmd.Wait()
 
 	log.Println("Program exited with", err)
 
-	// writer.Close()
-	// reader.Close()
-	<-quit
+	received := <-response
+
+	if !reflect.DeepEqual(received, expected) {
+		t.Errorf("\nGot: %s\nExp: %s", received, expected)
+	}
+}
+
+func processEcho(writer int, ch chan string, str string, t *testing.T) {
+	r, w, err := os.Pipe()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = SendIo(writer, r)
+
+	w.Write([]byte(str))
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	defer close(ch)
+
+	file, err := RecvIo(writer)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	data, err := ioutil.ReadAll(file)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	ch <- string(data)
+}
+
+func RecvIo(socket_fd int) (*os.File, error) {
+	// # TODO: why 4?
+	buf := make([]byte, syscall.CmsgSpace(4))
+	_, _, _, _, err := syscall.Recvmsg(socket_fd, nil, buf, syscall.MSG_WAITALL)
+
+	if err != nil {
+		return nil, err
+	}
+
+	msgs, err := syscall.ParseSocketControlMessage(buf)
+
+	if err != nil {
+		return nil, err
+	}
+
+	fds, err := syscall.ParseUnixRights(&msgs[0])
+
+	return os.NewFile(uintptr(fds[0]), ""), nil
+}
+
+// from: https://github.com/ftrvxmtrx/fd/blob/master/fd.go
+func SendIo(socket_fd int, file *os.File) error {
+	rights := syscall.UnixRights(int(file.Fd()))
+	return syscall.Sendmsg(socket_fd, nil, rights, nil, 0)
 }
