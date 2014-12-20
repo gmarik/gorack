@@ -56,7 +56,7 @@ func TestSockIo(t *testing.T) {
 	expected := "hello"
 
 	// TODO: investigate: sometimes takes too long
-	go processEcho(local, ch, t)
+	go ipcEcho(local, ch, t)
 
 	ch <- expected
 
@@ -71,7 +71,7 @@ func TestSockIo(t *testing.T) {
 	}
 }
 
-func processEcho(fd int, ch chan string, t *testing.T) {
+func ipcEcho(fd int, ch chan string, t *testing.T) {
 	r, w, err := os.Pipe()
 
 	if err != nil {
