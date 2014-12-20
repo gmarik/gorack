@@ -89,6 +89,14 @@ func ServeHttp(local_fd int) http.HandlerFunc {
 	}
 }
 
+type RackHandler struct {
+	local_fd int
+}
+
+func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ServeHttp(s.local_fd)(w, r)
+}
+
 func main() {
 
 	pair, err := syscall.Socketpair(syscall.AF_LOCAL, syscall.SOCK_STREAM, 0)
@@ -101,8 +109,7 @@ func main() {
 
 	go runProcessMaster(remote)
 
-	http.HandleFunc("/", ServeHttp(local))
-	http.ListenAndServe("localhost:3001", nil)
+	log.Fatal(http.ListenAndServe("localhost:3001", &RackHandler{local}))
 }
 
 func runProcessMaster(remote_fd int) {
