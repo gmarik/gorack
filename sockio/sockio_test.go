@@ -1,4 +1,4 @@
-package gorack
+package sockio
 
 // run with -v to see debug output:
 // go test -v gorack/sock_reader_test.go
@@ -78,16 +78,12 @@ func TestSocketReading(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	fd := os.NewFile(uintptr(reader), "writer")
-
 	// child process' FDs start from 3 (0, 1, 2)
-	cmd.ExtraFiles = []*os.File{fd}
+	cmd.ExtraFiles = []*os.File{os.NewFile(uintptr(reader), "writer")}
 
 	if err := cmd.Start(); err != nil {
 		log.Fatal("Error running process", err)
 	}
-
-	fd.Close()
 
 	go io.Copy(os.Stdout, out)
 	go io.Copy(os.Stderr, errout)
@@ -96,7 +92,9 @@ func TestSocketReading(t *testing.T) {
 
 	expected := "hello"
 
-	go processEcho(writer, response, expected, t)
+	sio := &SockIo{writer}
+	// TODO: investigate: sometimes takes too long
+	go processEcho(sio, response, expected, t)
 
 	err = cmd.Wait()
 
@@ -109,14 +107,14 @@ func TestSocketReading(t *testing.T) {
 	}
 }
 
-func processEcho(writer int, ch chan string, str string, t *testing.T) {
+func processEcho(s *SockIo, ch chan string, str string, t *testing.T) {
 	r, w, err := os.Pipe()
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = SendIo(writer, r)
+	err = s.SendIo(r)
 
 	w.Write([]byte(str))
 
@@ -126,7 +124,7 @@ func processEcho(writer int, ch chan string, str string, t *testing.T) {
 
 	defer close(ch)
 
-	file, err := RecvIo(writer)
+	file, err := s.RecvIo()
 
 	if err != nil {
 		t.Error(err)
@@ -139,30 +137,4 @@ func processEcho(writer int, ch chan string, str string, t *testing.T) {
 	}
 
 	ch <- string(data)
-}
-
-func RecvIo(socket_fd int) (*os.File, error) {
-	// # TODO: why 4?
-	buf := make([]byte, syscall.CmsgSpace(4))
-	_, _, _, _, err := syscall.Recvmsg(socket_fd, nil, buf, syscall.MSG_WAITALL)
-
-	if err != nil {
-		return nil, err
-	}
-
-	msgs, err := syscall.ParseSocketControlMessage(buf)
-
-	if err != nil {
-		return nil, err
-	}
-
-	fds, err := syscall.ParseUnixRights(&msgs[0])
-
-	return os.NewFile(uintptr(fds[0]), ""), nil
-}
-
-// from: https://github.com/ftrvxmtrx/fd/blob/master/fd.go
-func SendIo(socket_fd int, file *os.File) error {
-	rights := syscall.UnixRights(int(file.Fd()))
-	return syscall.Sendmsg(socket_fd, nil, rights, nil, 0)
 }
