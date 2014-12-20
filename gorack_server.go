@@ -133,7 +133,7 @@ func runProcessMaster(fd *os.File, bin_path string, args ...string) {
 		log.Fatal(err)
 	}
 
-	if err = cmd.Start(); err != nil {
+	if err := cmd.Start(); err != nil {
 		log.Fatal(err)
 	}
 
