@@ -1,4 +1,4 @@
-package sockio
+package ipcio
 
 // run with -v to see debug output:
 // go test -v gorack/sock_reader_test.go
@@ -17,7 +17,7 @@ import (
 	"testing"
 )
 
-func TestSockIo(t *testing.T) {
+func TestIpcIo(t *testing.T) {
 	fmt.Println("Creating Socket")
 	pair, err := syscall.Socketpair(syscall.AF_LOCAL, syscall.SOCK_STREAM, 0)
 

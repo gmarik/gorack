@@ -1,4 +1,4 @@
-package sockio
+package ipcio
 
 import (
 	"os"
