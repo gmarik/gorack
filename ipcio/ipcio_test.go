@@ -28,7 +28,7 @@ func TestIpcIo(t *testing.T) {
 	}
 
 	_, filename, _, _ := runtime.Caller(0)
-	path := path.Join(path.Dir(filename), "ipc_test.rb")
+	path := path.Join(path.Dir(filename), "ipcio_test.rb")
 
 	fmt.Println("Running:", path)
 
