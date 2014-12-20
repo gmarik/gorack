@@ -1,16 +1,17 @@
 #!/usr/bin/env ruby
 # vim: set ft=ruby:
 
+STDOUT.sync = STDERR.sync = true
+
 begin
   require 'rubygems'
   require 'bundler'
   require 'bundler/setup'
 rescue => e
-  $stderr.puts e.message
+  STDERR.puts e.message
 end
 
 require_relative './gorack_server'
 
-$stdout.sync = $stderr.sync = true
 
 Gorack::Server.run(ARGV[0])
