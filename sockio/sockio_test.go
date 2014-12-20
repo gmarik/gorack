@@ -53,11 +53,10 @@ func TestSockIo(t *testing.T) {
 
 	ch := make(chan string)
 
-	expected := "hello"
-
 	// TODO: investigate: sometimes takes too long
 	go ipcEcho(local, ch, t)
 
+	expected := "hello"
 	ch <- expected
 
 	err = cmd.Wait()
