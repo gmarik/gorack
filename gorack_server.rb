@@ -19,6 +19,7 @@ module Gorack
     def initialize(config, options = {})
       self.config = config
       @master_io = UNIXSocket.for_fd(3)
+      @app = load_config
     end
 
     def load_config
@@ -46,8 +47,6 @@ module Gorack
         "rack.run_once" => false,
         "rack.url_scheme" => ["yes", "on", "1"].include?(env["HTTPS"]) ? "https" : "http"
       }.merge(env)
-
-      app = load_config
 
       status, headers, body = app.call(env)
 
