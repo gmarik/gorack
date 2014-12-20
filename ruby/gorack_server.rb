@@ -61,8 +61,6 @@ module Gorack
 
       status, headers, body = app.call(env)
 
-      # puts status, headers, body
-
       writer.write("#{status}\n")
       writer.write(headers.map {|k, v| "#{k}: #{v}"}.join("\n"))
       writer.write("\n\n")
