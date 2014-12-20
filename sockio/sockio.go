@@ -5,14 +5,10 @@ import (
 	"syscall"
 )
 
-type SockIo struct {
-	Fd int
-}
-
-func (s *SockIo) RecvIo() (*os.File, error) {
+func RecvIo(fd int) (*os.File, error) {
 	// # TODO: why 4?
 	buf := make([]byte, syscall.CmsgSpace(4))
-	_, _, _, _, err := syscall.Recvmsg(s.Fd, nil, buf, syscall.MSG_WAITALL)
+	_, _, _, _, err := syscall.Recvmsg(fd, nil, buf, syscall.MSG_WAITALL)
 
 	if err != nil {
 		return nil, err
@@ -30,7 +26,7 @@ func (s *SockIo) RecvIo() (*os.File, error) {
 }
 
 // from: https://github.com/ftrvxmtrx/fd/blob/master/fd.go
-func (s *SockIo) SendIo(file *os.File) error {
+func SendIo(fd int, file *os.File) error {
 	rights := syscall.UnixRights(int(file.Fd()))
-	return syscall.Sendmsg(s.Fd, nil, rights, nil, 0)
+	return syscall.Sendmsg(fd, nil, rights, nil, 0)
 }

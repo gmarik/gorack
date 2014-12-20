@@ -55,9 +55,8 @@ func TestSockIo(t *testing.T) {
 
 	expected := "hello"
 
-	sio := &SockIo{writer}
 	// TODO: investigate: sometimes takes too long
-	go processEcho(sio, response, expected, t)
+	go processEcho(writer, response, expected, t)
 
 	err = cmd.Wait()
 
@@ -70,14 +69,14 @@ func TestSockIo(t *testing.T) {
 	}
 }
 
-func processEcho(s *SockIo, ch chan string, str string, t *testing.T) {
+func processEcho(fd int, ch chan string, str string, t *testing.T) {
 	r, w, err := os.Pipe()
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = s.SendIo(r)
+	err = SendIo(fd, r)
 
 	w.Write([]byte(str))
 
@@ -87,7 +86,7 @@ func processEcho(s *SockIo, ch chan string, str string, t *testing.T) {
 
 	defer close(ch)
 
-	file, err := s.RecvIo()
+	file, err := RecvIo(fd)
 
 	if err != nil {
 		t.Error(err)
