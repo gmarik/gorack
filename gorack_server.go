@@ -141,6 +141,6 @@ func runProcessMaster(fd *os.File, bin_path string, args ...string) {
 	go io.Copy(os.Stderr, outerr)
 
 	if err = cmd.Wait(); err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 }
