@@ -6,7 +6,7 @@ require 'rack/builder'
 require 'json'
 
 module Gorack
-  class Rack
+  class Server
     def self.run(*args)
       s = new(*args)
       loop { s.handle }
