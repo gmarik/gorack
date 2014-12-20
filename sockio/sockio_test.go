@@ -21,7 +21,7 @@ func TestSockIo(t *testing.T) {
 	fmt.Println("Creating Socket")
 	pair, err := syscall.Socketpair(syscall.AF_LOCAL, syscall.SOCK_STREAM, 0)
 
-	var reader, writer = pair[0], pair[1]
+	var remote, local = pair[0], pair[1]
 
 	if err != nil {
 		log.Fatal(err)
@@ -42,7 +42,7 @@ func TestSockIo(t *testing.T) {
 	}
 
 	// child process' FDs start from 3 (0, 1, 2)
-	cmd.ExtraFiles = []*os.File{os.NewFile(uintptr(reader), "writer")}
+	cmd.ExtraFiles = []*os.File{os.NewFile(uintptr(remote), "reader")}
 
 	if err := cmd.Start(); err != nil {
 		log.Fatal("Error running process", err)
@@ -51,25 +51,27 @@ func TestSockIo(t *testing.T) {
 	go io.Copy(os.Stdout, out)
 	go io.Copy(os.Stderr, errout)
 
-	response := make(chan string)
+	ch := make(chan string)
 
 	expected := "hello"
 
 	// TODO: investigate: sometimes takes too long
-	go processEcho(writer, response, expected, t)
+	go processEcho(local, ch, t)
+
+	ch <- expected
 
 	err = cmd.Wait()
 
 	log.Println("Program exited with", err)
 
-	received := <-response
+	received := <-ch
 
 	if !reflect.DeepEqual(received, expected) {
 		t.Errorf("\nGot: %s\nExp: %s", received, expected)
 	}
 }
 
-func processEcho(fd int, ch chan string, str string, t *testing.T) {
+func processEcho(fd int, ch chan string, t *testing.T) {
 	r, w, err := os.Pipe()
 
 	if err != nil {
@@ -78,7 +80,7 @@ func processEcho(fd int, ch chan string, str string, t *testing.T) {
 
 	err = SendIo(fd, r)
 
-	w.Write([]byte(str))
+	w.Write([]byte(<-ch))
 
 	if err != nil {
 		t.Error(err)
