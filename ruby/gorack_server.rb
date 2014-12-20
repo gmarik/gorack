@@ -8,8 +8,13 @@ require 'json'
 module Gorack
   class Server
     def self.run(*args)
+      log("Waiting for connections")
       s = new(*args)
       loop { s.handle }
+    end
+
+    def self.log(msg)
+      STDOUT.puts("[Master] #{msg}")
     end
 
     attr_accessor :config, :app, :file
@@ -22,6 +27,10 @@ module Gorack
       @app = load_config
     end
 
+    def log(msg)
+      self.class.log(msg)
+    end
+
     def load_config
       cfgfile = File.read(config)
       eval("Rack::Builder.new {( #{cfgfile}\n )}.to_app", TOPLEVEL_BINDING, config)
@@ -29,6 +38,8 @@ module Gorack
 
     def handle
       reader, writer = master_io.recv_io, master_io.recv_io
+
+      log("Connection received")
 
       status  = 500
       headers = { 'Content-Type' => 'text/html' }

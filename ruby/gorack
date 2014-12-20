@@ -11,4 +11,6 @@ end
 
 require_relative './gorack_server'
 
+$stdout.sync = $stderr.sync = true
+
 Gorack::Server.run(ARGV[0])
