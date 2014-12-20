@@ -13,16 +13,6 @@ import (
 	"./ipcio"
 )
 
-type RackRequest struct {
-	REQUEST_METHOD string
-	SCRIPT_NAME    string
-	PATH_INFO      string
-	QUERY_STRING   string
-	SERVER_NAME    string
-	SERVER_PORT    string
-	HTTP_vars      []string
-}
-
 func SendIo(fd int) (*os.File, *os.File, error) {
 
 	req_reader, req_writer, err := os.Pipe()
@@ -58,16 +48,7 @@ func SendIo(fd int) (*os.File, *os.File, error) {
 func ServeHttp(local_fd int) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		rr := RackRequest{
-			REQUEST_METHOD: r.Method,
-			SCRIPT_NAME:    r.URL.Path,
-			PATH_INFO:      r.URL.Path,
-			QUERY_STRING:   r.URL.RawQuery,
-			SERVER_NAME:    "hello",
-			SERVER_PORT:    "80",
-		}
-
-		jsonData, err := json.Marshal(rr)
+		jsonData, err := json.Marshal(gorack.NewRackRequest(r, "server", "port"))
 
 		if err != nil {
 			log.Fatal(err)
