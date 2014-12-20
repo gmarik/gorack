@@ -1,6 +1,9 @@
+resp = "hellozzzz"
+
 headers = {
   'X-This' => 'a messsage',
-  'Content-Length' => 5,
+  'Content-Length' => resp.size,
 }
 
-run lambda {|env| [201, headers, ["hello"]]}
+
+run lambda {|env| [201, headers, [resp]]}

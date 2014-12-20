@@ -9,21 +9,16 @@ module Gorack
   class Rack
     def self.run(*args)
       s = new(*args)
-      s.handle
+      loop { s.handle }
     end
 
     attr_accessor :config, :app, :file
     attr_accessor :ppid, :server, :heartbeat
-    attr_accessor :io
+    attr_accessor :master_io
 
     def initialize(config, options = {})
       self.config = config
-
-      @reader, @writer = IO.open(3), IO.open(4)
-
-      trap('TERM') { exit }
-      trap('INT')  { exit }
-      trap('QUIT') { close }
+      @master_io = UNIXSocket.for_fd(3)
     end
 
     def load_config
@@ -32,12 +27,13 @@ module Gorack
     end
 
     def handle
+      reader, writer = master_io.recv_io, master_io.recv_io
+
       status  = 500
       headers = { 'Content-Type' => 'text/html' }
       body    = ["Internal Server Error"]
 
-      req = StringIO.new
-      IO.copy_stream(@reader, req)
+      IO.copy_stream(reader, req = StringIO.new)
 
       env = ::JSON.parse(req.string)
 
@@ -57,13 +53,13 @@ module Gorack
 
       # puts status, headers, body
 
-      @writer.write("#{status}\n")
-      @writer.write(headers.map {|k, v| "#{k}: #{v}"}.join("\n"))
-      @writer.write("\n\n")
+      writer.write("#{status}\n")
+      writer.write(headers.map {|k, v| "#{k}: #{v}"}.join("\n"))
+      writer.write("\n\n")
       # TODO:
       # IO.copy_stream(body, @writer)
-      @writer.write(body.join)
-      @writer.close
+      writer.write(body.join)
+      writer.close
       # puts 'Done'
     end
   end
