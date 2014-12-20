@@ -107,17 +107,19 @@ func main() {
 
 	remote, local := pair[0], pair[1]
 
-	go runProcessMaster(remote)
+	// child process' FDs start from 3 (0, 1, 2)
+	master_io := os.NewFile(uintptr(remote), "master_io")
+	go runProcessMaster(master_io, "./ruby/gorack", "./ruby/config_test.ru")
 
-	log.Fatal(http.ListenAndServe("localhost:3001", &RackHandler{local}))
+	address := "localhost:3001"
+	log.Print("Starting on:", address)
+	log.Fatal(http.ListenAndServe(address, &RackHandler{local}))
 }
 
-func runProcessMaster(remote_fd int) {
-	cmd := exec.Command("./gorack.sh", "./config.ru")
+func runProcessMaster(fd *os.File, bin_path string, args ...string) {
+	cmd := exec.Command(bin_path, args...)
 
-	// child process' FDs start from 3 (0, 1, 2)
-	master_io := os.NewFile(uintptr(remote_fd), "master_io")
-	cmd.ExtraFiles = []*os.File{master_io}
+	cmd.ExtraFiles = []*os.File{fd}
 
 	out, err := cmd.StdoutPipe()
 
