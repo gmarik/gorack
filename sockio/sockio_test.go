@@ -10,54 +10,14 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"reflect"
+	"runtime"
 	"syscall"
 	"testing"
 )
 
-const rubyProcess = `#!/usr/bin/env ruby
-require 'socket'
-
-def log(msg)
-	puts "[RUBY] #{msg}"
-end
-
-# passed from parent process
-sock = UNIXSocket.for_fd(3)
-
-log "receiving socket"
-r = sock.recv_io
-
-log "creating proxy pipe"
-ior, iow = IO.pipe
-
-log "sending the pipe"
-sock.send_io(ior)
-
-log "copying stream"
-IO.copy_stream(r, iow)
-`
-
-var rubyProcessFile *os.File
-
-func writeContent() {
-	var err error
-
-	rubyProcessFile, err = ioutil.TempFile("/tmp/", "rubySock")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if _, err := rubyProcessFile.Write([]byte(rubyProcess)); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func TestSocketReading(t *testing.T) {
-	writeContent()
-	defer rubyProcessFile.Close()
-
+func TestSockIo(t *testing.T) {
 	fmt.Println("Creating Socket")
 	pair, err := syscall.Socketpair(syscall.AF_LOCAL, syscall.SOCK_STREAM, 0)
 
@@ -67,9 +27,12 @@ func TestSocketReading(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Reading from:", rubyProcessFile.Name())
+	_, filename, _, _ := runtime.Caller(0)
+	path := path.Join(path.Dir(filename), "ruby_process_test.rb")
 
-	cmd := exec.Command("ruby", rubyProcessFile.Name())
+	fmt.Println("Running:", path)
+
+	cmd := exec.Command("ruby", path)
 
 	out, _ := cmd.StdoutPipe()
 	errout, _ := cmd.StderrPipe()
