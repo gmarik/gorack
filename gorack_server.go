@@ -23,6 +23,38 @@ type RackRequest struct {
 	HTTP_vars      []string
 }
 
+func SendIo(fd int) (*os.File, *os.File, error) {
+
+	req_reader, req_writer, err := os.Pipe()
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res_reader, res_writer, err := os.Pipe()
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = ipcio.SendIo(fd, req_reader)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = ipcio.SendIo(fd, res_writer)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	req_reader.Close()
+	res_writer.Close()
+
+	return res_reader, req_writer, nil
+}
+
 func ServeHttp(local_fd int) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -41,24 +73,7 @@ func ServeHttp(local_fd int) http.HandlerFunc {
 			log.Fatal(err)
 		}
 
-		req_reader, req_writer, err := os.Pipe()
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		res_reader, res_writer, err := os.Pipe()
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = ipcio.SendIo(local_fd, req_reader)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = ipcio.SendIo(local_fd, res_writer)
+		res_reader, req_writer, err := SendIo(local_fd)
 
 		if err != nil {
 			log.Fatal(err)
@@ -66,8 +81,6 @@ func ServeHttp(local_fd int) http.HandlerFunc {
 
 		req_writer.Write(jsonData)
 		req_writer.Close()
-		req_reader.Close()
-		res_writer.Close()
 
 		// resp := gorack.NewResponse(io.TeeReader(serverReader, os.Stdout))
 		resp := gorack.NewResponse(res_reader)
@@ -90,7 +103,7 @@ func ServeHttp(local_fd int) http.HandlerFunc {
 		_, err = io.Copy(w, resp.Body)
 
 		if err != nil {
-			log.Println(err.Error())
+			log.Fatal(err)
 		}
 	}
 }
@@ -114,19 +127,30 @@ func main() {
 func runProcessMaster(remote_fd int) {
 	cmd := exec.Command("./gorack.sh", "./config.ru")
 
-	out, err := cmd.StdoutPipe()
-	erro, err := cmd.StderrPipe()
-
 	// child process' FDs start from 3 (0, 1, 2)
 	master_io := os.NewFile(uintptr(remote_fd), "master_io")
 	cmd.ExtraFiles = []*os.File{master_io}
+
+	out, err := cmd.StdoutPipe()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	outerr, err := cmd.StderrPipe()
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if err = cmd.Start(); err != nil {
 		log.Fatal(err)
 	}
 
 	go io.Copy(os.Stdout, out)
-	go io.Copy(os.Stderr, erro)
+	go io.Copy(os.Stderr, outerr)
 
-	err = cmd.Wait()
+	if err = cmd.Wait(); err != nil {
+		log.Println(err)
+	}
 }
