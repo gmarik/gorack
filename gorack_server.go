@@ -63,7 +63,7 @@ func ServeHttp(local_fd int) http.HandlerFunc {
 		req_writer.Write(jsonData)
 		req_writer.Close()
 
-		// resp := gorack.NewResponse(io.TeeReader(serverReader, os.Stdout))
+		// resp := gorack.NewResponse(io.TeeReader(res_reader, os.Stdout))
 		resp := gorack.NewResponse(res_reader)
 
 		if err := resp.Parse(); err != nil {
@@ -107,9 +107,15 @@ func main() {
 
 	remote, local := pair[0], pair[1]
 
+	if len(os.Args) == 1 {
+		log.Fatal("specify path to config.ru file")
+	}
+
+	config_path := os.Args[1]
+
 	// child process' FDs start from 3 (0, 1, 2)
 	master_io := os.NewFile(uintptr(remote), "master_io")
-	go runProcessMaster(master_io, "./ruby/gorack", "./ruby/config_test.ru")
+	go runProcessMaster(master_io, "./ruby/gorack", config_path)
 
 	address := "localhost:3001"
 	log.Print("Starting on:", address)
