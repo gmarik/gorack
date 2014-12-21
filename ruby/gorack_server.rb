@@ -10,7 +10,11 @@ module Gorack
     def self.run(*args)
       log("Waiting for connections")
       s = new(*args)
-      loop { s.handle }
+      loop {
+        s.accept do |reader, writer|
+          Process.fork { s.handle(reader, writer) }
+        end
+      }
     end
 
     def self.log(msg)
@@ -20,6 +24,15 @@ module Gorack
     attr_accessor :config, :app, :file
     attr_accessor :ppid, :server, :heartbeat
     attr_accessor :master_io
+
+    def accept(&block)
+      pipe = master_io.recv_io, master_io.recv_io
+      if block
+        block.call(*pipe)
+        pipe.each(&:close)
+      end
+      pipe
+    end
 
     def initialize(config, options = {})
       self.config = config
@@ -36,11 +49,7 @@ module Gorack
       eval("Rack::Builder.new {( #{cfgfile}\n )}.to_app", TOPLEVEL_BINDING, config)
     end
 
-    def handle
-      reader, writer = master_io.recv_io, master_io.recv_io
-
-      log("Connection received")
-
+    def handle(reader, writer)
       status  = 500
       headers = { 'Content-Type' => 'text/html' }
       body    = ["Internal Server Error"]
@@ -64,11 +73,9 @@ module Gorack
       writer.write("#{status}\n")
       writer.write(headers.map {|k, v| "#{k}: #{v}"}.join("\n"))
       writer.write("\n\n")
-      # TODO:
-      # IO.copy_stream(body, @writer)
-      writer.write(body.join)
+      # TODO: use IO.copy_stream
+      body.each(&writer.method(:write))
       writer.close
-      # puts 'Done'
     end
   end
 end
