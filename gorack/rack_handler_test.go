@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestRackServer(t *testing.T) {
+func TestRackHandler(t *testing.T) {
 
 	// package variable
 	gorackRunner = "../ruby/gorack"
