@@ -1,10 +1,11 @@
+# Roadmap
+
 ## gorack_server test
-- create test to serve response(s)
+[x] create test to serve response(s)
 
 ## Logging
+[x] use loggers in both go server and ruby server
 - create separate loggers: INFO, DEBUG1, DEBUG2
-- use loggers in both go server and ruby server
-
 
 ## Get rid of Json in GoRack::Server
 - use \0 terminated strings
