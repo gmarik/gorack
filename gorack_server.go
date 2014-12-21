@@ -142,10 +142,24 @@ func runProcessMaster(fd *os.File, bin_path string, args ...string) {
 		log.Fatal(err)
 	}
 
-	go io.Copy(os.Stdout, out)
-	go io.Copy(os.Stderr, outerr)
+	go io.Copy(NewLogWriter(os.Stdout, "", log.LstdFlags), out)
+	go io.Copy(NewLogWriter(os.Stderr, "[StdErr]", log.LstdFlags), outerr)
 
 	if err = cmd.Wait(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+type LogWriter struct {
+	logger *log.Logger
+	prefix string
+}
+
+func NewLogWriter(w io.Writer, prefix string, flags int) *LogWriter {
+	return &LogWriter{log.New(w, "", flags), prefix}
+}
+
+func (l *LogWriter) Write(data []byte) (int, error) {
+	l.logger.Printf("%s%s", l.prefix, data)
+	return len(data), nil
 }
