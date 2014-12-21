@@ -13,5 +13,7 @@ end
 
 require_relative './gorack_server'
 
+# descriptor inherited from parent process
+master_sock = UNIXSocket.for_fd(3)
 
-Gorack::Server.run(ARGV[0])
+Gorack::Server.run(master_sock, ARGV[0])

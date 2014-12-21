@@ -34,9 +34,9 @@ module Gorack
       pipe
     end
 
-    def initialize(config, options = {})
-      self.config = config
-      @master_io = UNIXSocket.for_fd(3)
+    def initialize(master_sock, config_file, options = {})
+      @master_io = master_sock
+      @config = config_file
       @app = load_config
     end
 
