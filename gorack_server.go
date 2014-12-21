@@ -114,19 +114,19 @@ func main() {
 	config_path := os.Args[1]
 
 	// child process' FDs start from 3 (0, 1, 2)
-	master_io := os.NewFile(uintptr(remote), "master_io")
-	go runProcessMaster(master_io, "./ruby/gorack", config_path)
+	fd := os.NewFile(uintptr(remote), "master_io")
+
+	cmd := exec.Command("./ruby/gorack", config_path)
+	cmd.ExtraFiles = []*os.File{fd}
+
+	go runProcessMaster(cmd)
 
 	address := "localhost:3001"
 	log.Print("Starting on:", address)
 	log.Fatal(http.ListenAndServe(address, &RackHandler{local}))
 }
 
-func runProcessMaster(fd *os.File, bin_path string, args ...string) {
-	cmd := exec.Command(bin_path, args...)
-
-	cmd.ExtraFiles = []*os.File{fd}
-
+func runProcessMaster(cmd *exec.Cmd) {
 	var err error
 	var out, outerr io.Reader
 
