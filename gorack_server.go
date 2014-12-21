@@ -45,59 +45,58 @@ func SendIo(fd int) (*os.File, *os.File, error) {
 	return res_reader, req_writer, nil
 }
 
-func ServeHttp(local_fd int) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		jsonData, err := json.Marshal(gorack.NewRackRequest(r, "server", "port"))
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		res_reader, req_writer, err := SendIo(local_fd)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		req_writer.Write(jsonData)
-		req_writer.Close()
-
-		// resp := gorack.NewResponse(io.TeeReader(res_reader, os.Stdout))
-		resp := gorack.NewResponse(res_reader)
-
-		if err := resp.Parse(); err != nil {
-			log.Println("Error:", err.Error())
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			return
-		}
-
-		for name, values := range resp.Headers {
-			for _, val := range values {
-				// fmt.Println(name, val)
-				w.Header().Add(name, val)
-			}
-		}
-
-		w.WriteHeader(resp.StatusCode)
-
-		_, err = io.Copy(w, resp.Body)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-}
-
 type RackHandler struct {
 	local_fd int
 }
 
 func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ServeHttp(s.local_fd)(w, r)
+	jsonData, err := json.Marshal(gorack.NewRackRequest(r, "server", "port"))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	res_reader, req_writer, err := SendIo(s.local_fd)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req_writer.Write(jsonData)
+	req_writer.Close()
+
+	// resp := gorack.NewResponse(io.TeeReader(res_reader, os.Stdout))
+	resp := gorack.NewResponse(res_reader)
+
+	if err := resp.Parse(); err != nil {
+		log.Println("Error:", err.Error())
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+
+	for name, values := range resp.Headers {
+		for _, val := range values {
+			// fmt.Println(name, val)
+			w.Header().Add(name, val)
+		}
+	}
+
+	w.WriteHeader(resp.StatusCode)
+
+	_, err = io.Copy(w, resp.Body)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
+
+	if len(os.Args) == 1 {
+		log.Fatal("specify path to config.ru file")
+	}
+
+	config_path := os.Args[1]
 
 	pair, err := syscall.Socketpair(syscall.AF_LOCAL, syscall.SOCK_STREAM, 0)
 
@@ -106,12 +105,6 @@ func main() {
 	}
 
 	remote, local := pair[0], pair[1]
-
-	if len(os.Args) == 1 {
-		log.Fatal("specify path to config.ru file")
-	}
-
-	config_path := os.Args[1]
 
 	// child process' FDs start from 3 (0, 1, 2)
 	fd := os.NewFile(uintptr(remote), "master_io")
