@@ -127,15 +127,14 @@ func runProcessMaster(fd *os.File, bin_path string, args ...string) {
 
 	cmd.ExtraFiles = []*os.File{fd}
 
-	out, err := cmd.StdoutPipe()
+	var err error
+	var out, outerr io.Reader
 
-	if err != nil {
+	if out, err = cmd.StdoutPipe(); err != nil {
 		log.Fatal(err)
 	}
 
-	outerr, err := cmd.StderrPipe()
-
-	if err != nil {
+	if outerr, err = cmd.StderrPipe(); err != nil {
 		log.Fatal(err)
 	}
 
