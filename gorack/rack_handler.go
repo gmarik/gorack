@@ -86,7 +86,10 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rackReq := NewRackRequest(r, "server", "port")
 
 	req_writer.Write(rackReq.Bytes())
-	req_writer.Close()
+
+	if _, err = io.Copy(req_writer, r.Body); err != nil {
+		log.Println("Error writing request body:", err)
+	}
 
 	// resp := NewResponse(io.TeeReader(res_reader, os.Stdout))
 	resp := NewResponse(res_reader)
