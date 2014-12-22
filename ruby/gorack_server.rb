@@ -88,12 +88,11 @@ private
     end
 
     def read_request(reader)
-      return [{}, reader] if reader.eof?
-
       eol = eoh = false
       request = StringIO.new
 
       while not eoh do
+        break if reader.eof?
         char = reader.read(1)
         request.write(char)
         eol = char == "\n"
