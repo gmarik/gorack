@@ -42,7 +42,7 @@ func NewRackHandler(configPath string) *RackHandler {
 	}
 }
 
-func SendIo(fd int) (*os.File, *os.File, error) {
+func (s *RackHandler) sendIo() (*os.File, *os.File, error) {
 
 	req_reader, req_writer, err := os.Pipe()
 
@@ -56,18 +56,21 @@ func SendIo(fd int) (*os.File, *os.File, error) {
 		return nil, nil, err
 	}
 
-	err = ipcio.SendIo(fd, req_reader)
+	err = ipcio.SendIo(s.local_fd, req_reader)
 
 	if err != nil {
 		return nil, nil, err
 	}
 
-	err = ipcio.SendIo(fd, res_writer)
+	err = ipcio.SendIo(s.local_fd, res_writer)
 
 	if err != nil {
 		return nil, nil, err
 	}
 
+	// Once sent a the process - close
+	// they'll still be open in the process
+	// to read/write
 	req_reader.Close()
 	res_writer.Close()
 
@@ -75,13 +78,14 @@ func SendIo(fd int) (*os.File, *os.File, error) {
 }
 
 func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	jsonData, err := json.Marshal(NewRackRequest(r, "server", "port"))
+	res_reader, req_writer, err := s.sendIo()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	res_reader, req_writer, err := SendIo(s.local_fd)
+	rackReq := NewRackRequest(r, "server", "port")
+	jsonData, err := json.Marshal(rackReq)
 
 	if err != nil {
 		log.Fatal(err)
