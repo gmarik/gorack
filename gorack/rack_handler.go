@@ -1,7 +1,6 @@
 package gorack
 
 import (
-	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -85,13 +84,8 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rackReq := NewRackRequest(r, "server", "port")
-	jsonData, err := json.Marshal(rackReq)
 
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	req_writer.Write(jsonData)
+	req_writer.Write(rackReq.Bytes())
 	req_writer.Close()
 
 	// resp := NewResponse(io.TeeReader(res_reader, os.Stdout))

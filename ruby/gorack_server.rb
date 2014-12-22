@@ -3,7 +3,6 @@ require 'socket'
 require 'stringio'
 require 'rack'
 require 'rack/builder'
-require 'json'
 
 module Gorack
   class Server
@@ -50,25 +49,35 @@ module Gorack
     end
 
     def handle(reader, writer)
-      status  = 500
-      headers = { 'Content-Type' => 'text/html' }
-      body    = ["Internal Server Error"]
+      begin
+        request_env, body_reader = read_request(reader)
 
-      IO.copy_stream(reader, req = StringIO.new)
+        rack_env = {
+          "rack.version" => 1,
+          "rack.input" => body_reader,
+          "rack.errors" => STDERR,
+          "rack.multithread" => false,
+          "rack.multiprocess" => true,
+          "rack.run_once" => false,
+          "rack.url_scheme" => ["yes", "on", "1"].include?(request_env["HTTPS"]) ? "https" : "http"
+        }.merge(request_env)
 
-      env = ::JSON.parse(req.string)
+        status, headers, body = app.call(rack_env)
 
-      env = {
-        "rack.version" => 1,
-        "rack.input" => StringIO.new,
-        "rack.errors" => $stderr,
-        "rack.multithread" => false,
-        "rack.multiprocess" => true,
-        "rack.run_once" => false,
-        "rack.url_scheme" => ["yes", "on", "1"].include?(env["HTTPS"]) ? "https" : "http"
-      }.merge(env)
+      rescue => e
+        log("ERROR: " + e.message)
+        status  = 500
+        headers = {'Content-Type' => 'text/plain' }
+        body    = ["Internal Server Error"]
+      end
 
-      status, headers, body = app.call(env)
+      write_response(writer, [status, headers, body])
+    end
+
+private
+
+    def write_response(writer, resp)
+      status, headers, body = *resp
 
       writer.write("#{status}\n")
       writer.write(headers.map {|k, v| "#{k}: #{v}"}.join("\n"))
@@ -77,5 +86,24 @@ module Gorack
       body.each(&writer.method(:write))
       writer.close
     end
+
+    def read_request(reader)
+      return [{}, reader] if reader.eof?
+
+      eol = eoh = false
+      request = StringIO.new
+
+      while not eoh do
+        char = reader.read(1)
+        request.write(char)
+        eol = char == "\n"
+        eoh = eol && char == "\n"
+      end
+
+      lines = request.string.split("\n")
+      env = Hash[*lines.flat_map {|l| l.split(": ", 2)}]
+      [env, reader]
+    end
+
   end
 end

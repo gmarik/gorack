@@ -1,6 +1,10 @@
 package gorack
 
-import "net/http"
+import (
+	"bytes"
+	"fmt"
+	"net/http"
+)
 
 type RackRequest struct {
 	REQUEST_METHOD string
@@ -21,4 +25,27 @@ func NewRackRequest(r *http.Request, serverName, serverPort string) *RackRequest
 		SERVER_NAME:    serverName,
 		SERVER_PORT:    serverPort,
 	}
+}
+
+func (r *RackRequest) Bytes() []byte {
+	items := []struct {
+		k, val string
+	}{
+		{"REQUEST_METHOD", r.REQUEST_METHOD},
+		{"SCRIPT_NAME", r.SCRIPT_NAME},
+		{"PATH_INFO", r.PATH_INFO},
+		{"QUERY_STRING", r.QUERY_STRING},
+		{"SERVER_NAME", r.SERVER_NAME},
+		{"SERVER_PORT", r.SERVER_PORT},
+	}
+
+	buf := &bytes.Buffer{}
+
+	for _, item := range items {
+		buf.WriteString(fmt.Sprintf("%s: %s\n", item.k, item.val))
+	}
+
+	buf.WriteString("\n")
+
+	return buf.Bytes()
 }
