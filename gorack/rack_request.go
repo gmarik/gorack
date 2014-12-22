@@ -12,8 +12,8 @@ type RackRequest struct {
 	HTTP_vars      []string
 }
 
-func NewRackRequest(r *http.Request, serverName, serverPort string) RackRequest {
-	return RackRequest{
+func NewRackRequest(r *http.Request, serverName, serverPort string) *RackRequest {
+	return &RackRequest{
 		REQUEST_METHOD: r.Method,
 		SCRIPT_NAME:    r.URL.Path,
 		PATH_INFO:      r.URL.Path,

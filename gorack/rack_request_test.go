@@ -19,7 +19,7 @@ func TestRackRequest(t *testing.T) {
 
 	got := NewRackRequest(r, "server", "port")
 
-	exp := RackRequest{
+	exp := &RackRequest{
 		REQUEST_METHOD: "GET",
 		SCRIPT_NAME:    "/path/script.ext",
 		PATH_INFO:      "/path/script.ext",
