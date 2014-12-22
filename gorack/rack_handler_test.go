@@ -34,3 +34,7 @@ func TestRackHandler(t *testing.T) {
 		t.Errorf("\nGot:%s\nExp:%s", got, exp)
 	}
 }
+
+func TestIpcEcho(t *testing.T) {
+	t.SkipNow()
+}

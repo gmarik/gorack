@@ -53,5 +53,8 @@ func TestRackRequestBytesSerialization(t *testing.T) {
 	if !bytes.Equal(got, exp) {
 		t.Errorf("\nExp: %s\nGot: %s", exp, got)
 	}
+}
 
+func TestRequestHeaders(t *testing.T) {
+	t.SkipNow()
 }
