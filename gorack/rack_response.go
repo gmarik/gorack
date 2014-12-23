@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+// delimiter used to separate headers from one another
+// and body from the rest of the headers
 const delim = "\x00"
 
 type RackResponse struct {
@@ -51,7 +53,7 @@ func (r *RackResponse) Parse() error {
 
 		char := string(buf[0]) // single char
 
-		// delim marks end of headers
+		// eoh marks end of headers
 		eoh = eol && delim == char
 
 		if eoh {
