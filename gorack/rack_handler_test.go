@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-var testBody = `OMG, test body`
+var testBody = "\x00OMG, test body\nhalps"
 
 func TestRackHandler(t *testing.T) {
 
