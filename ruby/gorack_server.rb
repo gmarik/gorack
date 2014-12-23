@@ -86,17 +86,17 @@ private
 
     def read_request(reader)
       eol = eoh = false
-      request = StringIO.new
+      buf = StringIO.new
 
       while not eoh do
         break if reader.eof?
-        request.write(char = reader.read(1))
+        buf.write(char = reader.read(1))
         # TODO: write test for this
         eoh = eol && char == DELIM
         eol = char == DELIM
       end
 
-      lines = request.string.split(DELIM)
+      lines = buf.string.split(DELIM)
       env = Hash[*lines.flat_map {|l| l.split(": ", 2)}]
 
       # reader is at body start or EOF
