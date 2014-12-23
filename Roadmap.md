@@ -2,7 +2,8 @@
 
 ## gorack_server test
 [x] create test to serve response(s)
-[ ] include headers in request and read them properly
+[x] submit request body as well
+[ ] submit request headers (go) and parse them properly(rack)
 
 ## Logging
 [x] use loggers in both go server and ruby server
