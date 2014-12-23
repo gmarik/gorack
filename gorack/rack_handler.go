@@ -67,9 +67,8 @@ func (s *RackHandler) sendIo() (*os.File, *os.File, error) {
 		return nil, nil, err
 	}
 
-	// Once sent a the process - close
+	// close pipes once FDs sent to a process
 	// they'll still be open in the process
-	// to read/write
 	req_reader.Close()
 	res_writer.Close()
 
