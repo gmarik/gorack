@@ -3,6 +3,7 @@ package gorack
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"strconv"
 	"strings"
 )
@@ -14,9 +15,6 @@ type RackResponse struct {
 	Headers      map[string][]string
 	StatusCode   int
 	Body         io.Reader
-
-	buf         *bytes.Buffer
-	headersSize uint
 }
 
 func NewResponse(r io.Reader) *RackResponse {
@@ -24,54 +22,54 @@ func NewResponse(r io.Reader) *RackResponse {
 }
 
 func (r *RackResponse) Parse() error {
-	r.buf = &bytes.Buffer{}
+	headerBuffer := &bytes.Buffer{}
 
 	// while determining headers size
 	// read(tee) headers into separate
 	// buffer for futher processing
-	reader := io.TeeReader(r.rackResponse, r.buf)
+	reader := io.TeeReader(r.rackResponse, headerBuffer)
 
 	// at some point reader reader reaches the body
 	r.Body = r.rackResponse
 
 	// read char by char to correctly land at body start
-	char := make([]byte, 1, 1)
+	buf := make([]byte, 1, 1)
 
 	// end of headers, end of line
 	eol, eoh := false, false
 
 	for {
-		n, err := reader.Read(char)
+		_, err := reader.Read(buf)
+
+		if err == io.EOF {
+			break
+		}
 
 		if err != nil {
 			return err
 		}
 
-		r.headersSize += uint(n)
+		char := string(buf[0]) // single char
 
 		// delim marks end of headers
-		eoh = eol && delim == string(char[0])
+		eoh = eol && delim == char
 
 		if eoh {
 			break
 		}
 
-		eol = delim == string(char[0])
+		eol = delim == char
 	}
 
-	// fmt.Println("Read ", r.headersSize, " bytes")
-
-	if err := r.parseHeaders(); err != nil {
+	if err := r.parseHeaders(headerBuffer); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (r *RackResponse) parseHeaders() error {
-	// reads headers based on previously determined r.headersSize
-	headers := make([]byte, r.headersSize, r.headersSize)
-	_, err := r.buf.Read(headers)
+func (r *RackResponse) parseHeaders(buf io.Reader) error {
+	headers, err := ioutil.ReadAll(buf)
 
 	if err != nil {
 		return err
@@ -92,7 +90,6 @@ func (r *RackResponse) parseHeaders() error {
 
 	for _, line := range lines[1:] {
 		hdr := string(line)
-		// fmt.Println(hdr)
 
 		if hdr == "" {
 			continue
