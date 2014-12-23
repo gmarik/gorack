@@ -97,12 +97,15 @@ private
       while not eoh do
         break if reader.eof?
         request.write(char = reader.read(1))
-        eol = char == DELIM
+        # TODO: write test for this
         eoh = eol && char == DELIM
+        eol = char == DELIM
       end
+
 
       lines = request.string.split(DELIM)
       env = Hash[*lines.flat_map {|l| l.split(": ", 2)}]
+
       [env, reader]
     end
 
