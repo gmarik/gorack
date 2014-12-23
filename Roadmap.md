@@ -11,7 +11,7 @@
 ## Get rid of Json in GoRack::Server
 [x] get rid of Json serialisation
 [x] parse request similarly to rack_response parser in gorack_server.go
-- use \0 terminated strings
+[x] use \0 terminated strings
 
 ## Embed resources
 - so there's no dependencies
