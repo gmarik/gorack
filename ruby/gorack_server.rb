@@ -102,10 +102,10 @@ private
         eol = char == DELIM
       end
 
-
       lines = request.string.split(DELIM)
       env = Hash[*lines.flat_map {|l| l.split(": ", 2)}]
 
+      # reader is at body start or EOF
       [env, reader]
     end
 
