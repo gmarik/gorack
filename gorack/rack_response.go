@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+const delim = "\x00"
+
 type RackResponse struct {
 	rackResponse io.Reader
 	Headers      map[string][]string
@@ -47,14 +49,14 @@ func (r *RackResponse) Parse() error {
 
 		r.headersSize += uint(n)
 
-		// \n\n marks end of headers
-		eoh = eol && byte('\n') == char[0]
+		// delim marks end of headers
+		eoh = eol && delim == string(char[0])
 
 		if eoh {
 			break
 		}
 
-		eol = byte('\n') == char[0]
+		eol = delim == string(char[0])
 	}
 
 	// fmt.Println("Read ", r.headersSize, " bytes")
@@ -67,8 +69,6 @@ func (r *RackResponse) Parse() error {
 }
 
 func (r *RackResponse) parseHeaders() error {
-	var delim = byte('\n')
-
 	// reads headers based on previously determined r.headersSize
 	headers := make([]byte, r.headersSize, r.headersSize)
 	_, err := r.buf.Read(headers)
@@ -77,7 +77,7 @@ func (r *RackResponse) parseHeaders() error {
 		return err
 	}
 
-	lines := bytes.Split(headers, []byte{delim})
+	lines := bytes.Split(headers, []byte(delim))
 
 	// first header is a status code
 	code, err := strconv.Atoi(string(lines[0]))

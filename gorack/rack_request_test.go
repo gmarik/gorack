@@ -20,12 +20,13 @@ var (
 		SERVER_PORT:    "port",
 	}
 
-	testRequestString = `REQUEST_METHOD: GET
-SCRIPT_NAME: /path/script.ext
-PATH_INFO: /path/script.ext
-QUERY_STRING: query=param1
-SERVER_NAME: server
-SERVER_PORT: port`
+	testRequestString = "" +
+		"REQUEST_METHOD: GET\x00" +
+		"SCRIPT_NAME: /path/script.ext\x00" +
+		"PATH_INFO: /path/script.ext\x00" +
+		"QUERY_STRING: query=param1\x00" +
+		"SERVER_NAME: server\x00" +
+		"SERVER_PORT: port\x00"
 )
 
 func TestRackRequest(t *testing.T) {
@@ -46,7 +47,7 @@ func TestRackRequest(t *testing.T) {
 }
 
 func TestRackRequestBytesSerialization(t *testing.T) {
-	exp := []byte(testRequestString + "\n\n")
+	exp := []byte(testRequestString + delim)
 
 	got := testRequest.Bytes()
 

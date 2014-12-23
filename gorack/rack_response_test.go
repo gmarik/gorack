@@ -11,22 +11,24 @@ import (
 )
 
 const (
-	response = `200
-Server: nginx/1.6.0
-Content-Type: text/html
-Content-Length: 0
-Last-Modified: Sat, 06 Sep 2014 15:37:58 GMT
-Date: Wed, 26 Nov 2014 23:49:32 GMT
-Connection: keep-alive
-Set-Cookie: UserID=JohnDoe; Max-Age=3600; Version=1
+	response = "" +
+		"200\x00" +
+		"Server: nginx/1.6.0\x00" +
+		"Content-Type: text/html\x00" +
+		"Content-Length: 0\x00" +
+		"Last-Modified: Sat, 06 Sep 2014 15:37:58 GMT\x00" +
+		"Date: Wed, 26 Nov 2014 23:49:32 GMT\x00" +
+		"Connection: keep-alive\x00" +
+		"Set-Cookie: UserID=JohnDoe; Max-Age=3600; Version=1\x00" +
+		"\x00" +
+		"hello world!"
 
-hello world!`
-
-	response2 = `200
-X-This: a messsage
-Content-Length: 5
-
-hello`
+	response2 = "" +
+		"200\x00" +
+		"X-This: a messsage\x00" +
+		"Content-Length: 5\x00" +
+		"\x00" +
+		"hello"
 )
 
 func TestResponseParse(t *testing.T) {
@@ -72,8 +74,8 @@ func TestResponseParse(t *testing.T) {
 
 	exp := "hello world!"
 
-	if !reflect.DeepEqual(string(body), exp) {
-		t.Errorf("\nExp %s\nGot %s", exp, string(body))
+	if !bytes.Equal(body, []byte(exp)) {
+		t.Errorf("\nExp: %v\nGot: %v", []byte(exp), body)
 	}
 }
 

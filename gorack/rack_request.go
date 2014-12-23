@@ -42,10 +42,10 @@ func (r *RackRequest) Bytes() []byte {
 	buf := &bytes.Buffer{}
 
 	for _, item := range items {
-		buf.WriteString(fmt.Sprintf("%s: %s\n", item.k, item.val))
+		buf.WriteString(fmt.Sprintf("%s: %s%s", item.k, item.val, delim))
 	}
 
-	buf.WriteString("\n")
+	buf.WriteString(delim)
 
 	return buf.Bytes()
 }

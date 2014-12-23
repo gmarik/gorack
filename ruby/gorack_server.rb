@@ -6,6 +6,9 @@ require 'rack/builder'
 
 module Gorack
   class Server
+
+    DELIM = "\0" # response/request delimiter
+
     def self.run(*args)
       log("Waiting for connections")
       s = new(*args)
@@ -79,9 +82,9 @@ private
     def write_response(writer, resp)
       status, headers, body = *resp
 
-      writer.write("#{status}\n")
-      writer.write(headers.map {|k, v| "#{k}: #{v}"}.join("\n"))
-      writer.write("\n\n")
+      writer.write("#{status}#{DELIM}")
+      writer.write(headers.map {|k, v| "#{k}: #{v}"}.join(DELIM))
+      writer.write(DELIM * 2)
       # TODO: use IO.copy_stream
       body.each(&writer.method(:write))
       writer.close
@@ -93,13 +96,12 @@ private
 
       while not eoh do
         break if reader.eof?
-        char = reader.read(1)
-        request.write(char)
-        eol = char == "\n"
-        eoh = eol && char == "\n"
+        request.write(char = reader.read(1))
+        eol = char == DELIM
+        eoh = eol && char == DELIM
       end
 
-      lines = request.string.split("\n")
+      lines = request.string.split(DELIM)
       env = Hash[*lines.flat_map {|l| l.split(": ", 2)}]
       [env, reader]
     end
