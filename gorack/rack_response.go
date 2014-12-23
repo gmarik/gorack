@@ -24,15 +24,12 @@ func NewResponse(r io.Reader) *RackResponse {
 }
 
 func (r *RackResponse) Parse() error {
-	headerBuffer := &bytes.Buffer{}
 
 	// while determining headers size
 	// read(tee) headers into separate
 	// buffer for futher processing
+	headerBuffer := &bytes.Buffer{}
 	reader := io.TeeReader(r.rackResponse, headerBuffer)
-
-	// at some point reader reader reaches the body
-	r.Body = r.rackResponse
 
 	// read char by char to correctly land at body start
 	buf := make([]byte, 1, 1)
@@ -63,18 +60,24 @@ func (r *RackResponse) Parse() error {
 		eol = delim == char
 	}
 
-	if err := r.parseHeaders(headerBuffer); err != nil {
+	code, headers, err := parseHeaders(headerBuffer)
+
+	if err != nil {
 		return err
 	}
+
+	r.StatusCode = code
+	r.Headers = headers
+	r.Body = r.rackResponse
 
 	return nil
 }
 
-func (r *RackResponse) parseHeaders(buf io.Reader) error {
+func parseHeaders(buf io.Reader) (int, map[string][]string, error) {
 	headers, err := ioutil.ReadAll(buf)
 
 	if err != nil {
-		return err
+		return 0, nil, err
 	}
 
 	lines := bytes.Split(headers, []byte(delim))
@@ -83,7 +86,7 @@ func (r *RackResponse) parseHeaders(buf io.Reader) error {
 	code, err := strconv.Atoi(string(lines[0]))
 
 	if err != nil {
-		return err
+		return 0, nil, err
 	}
 
 	hdrs := make(map[string][]string)
@@ -99,8 +102,5 @@ func (r *RackResponse) parseHeaders(buf io.Reader) error {
 		hdrs[kvs[0]] = strings.Split(kvs[1], "; ")
 	}
 
-	r.Headers = hdrs
-	r.StatusCode = code
-
-	return nil
+	return code, hdrs, nil
 }
