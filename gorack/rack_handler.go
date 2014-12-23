@@ -91,6 +91,8 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error writing request body:", err)
 	}
 
+	req_writer.Close()
+
 	// resp := NewResponse(io.TeeReader(res_reader, os.Stdout))
 	resp := NewResponse(res_reader)
 

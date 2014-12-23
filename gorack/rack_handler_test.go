@@ -4,8 +4,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
+
+var testBody = `OMG, test body`
 
 func TestRackHandler(t *testing.T) {
 
@@ -15,7 +18,9 @@ func TestRackHandler(t *testing.T) {
 	ts := httptest.NewServer(NewRackHandler("../ruby/config_test.ru"))
 	defer ts.Close()
 
-	res, err := http.Get(ts.URL)
+	body := strings.NewReader(testBody)
+
+	res, err := http.Post(ts.URL, "text/plain", body)
 	if err != nil {
 		t.Error(err)
 	}
@@ -28,7 +33,7 @@ func TestRackHandler(t *testing.T) {
 		t.Error(err)
 	}
 
-	exp := "hellozzzz"
+	exp := testBody
 
 	if exp != string(got) {
 		t.Errorf("\nGot:%s\nExp:%s", got, exp)
