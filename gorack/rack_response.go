@@ -86,9 +86,7 @@ func (r *RackResponse) parseHeaders(buf io.Reader) error {
 		return err
 	}
 
-	r.StatusCode = code
-
-	r.Headers = make(map[string][]string)
+	hdrs := make(map[string][]string)
 
 	for _, line := range lines[1:] {
 		hdr := string(line)
@@ -98,8 +96,11 @@ func (r *RackResponse) parseHeaders(buf io.Reader) error {
 		}
 
 		kvs := strings.SplitN(hdr, ": ", 2)
-		r.Headers[kvs[0]] = strings.Split(kvs[1], "; ")
+		hdrs[kvs[0]] = strings.Split(kvs[1], "; ")
 	}
+
+	r.Headers = hdrs
+	r.StatusCode = code
 
 	return nil
 }
