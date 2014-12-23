@@ -38,17 +38,11 @@ module Gorack
 
     def initialize(master_sock, config_file, options = {})
       @master_io = master_sock
-      @config = config_file
-      @app = load_config
+      @app, @app_options = Rack::Builder.parse_file(config_file)
     end
 
     def log(msg)
       self.class.log(msg)
-    end
-
-    def load_config
-      cfgfile = File.read(config)
-      eval("Rack::Builder.new {( #{cfgfile}\n )}.to_app", TOPLEVEL_BINDING, config)
     end
 
     def handle(reader, writer)
