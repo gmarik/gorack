@@ -78,7 +78,8 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res_reader, req_writer, err := s.sendIo()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println("[Error] creating resp/request pipes", err.Error())
+		return
 	}
 
 	rackReq := NewRackRequest(r, "server", "port")
