@@ -32,7 +32,7 @@ const (
 )
 
 func TestResponseParse(t *testing.T) {
-	r := NewResponse(strings.NewReader(response))
+	r := NewRackResponse(strings.NewReader(response))
 
 	result := map[string][]string{
 		"Server":         []string{"nginx/1.6.0"},
@@ -85,7 +85,7 @@ func TestReponse2(t *testing.T) {
 	write.Write([]byte(response2))
 	write.Close()
 
-	r := NewResponse(read)
+	r := NewRackResponse(read)
 
 	if err := r.Parse(); err != nil {
 		t.Error(err)

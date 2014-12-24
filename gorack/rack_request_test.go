@@ -36,7 +36,6 @@ var (
 )
 
 func TestRackRequestBytesSerialization(t *testing.T) {
-	exp := []byte(testRequestString)
 
 	url, err := url.Parse(testUrl)
 
@@ -47,8 +46,9 @@ func TestRackRequestBytesSerialization(t *testing.T) {
 	r := &http.Request{Method: "GET", URL: url, Header: headers}
 
 	testRequest.Request = r
-
 	got := testRequest.Bytes()
+
+	exp := []byte(testRequestString)
 
 	if !bytes.Equal(got, exp) {
 		t.Errorf("\nExp: %s\nGot: %s", exp, got)

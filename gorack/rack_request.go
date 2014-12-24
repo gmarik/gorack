@@ -3,6 +3,7 @@ package gorack
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -49,4 +50,18 @@ func (rr *RackRequest) Bytes() []byte {
 	buf.WriteString(delim)
 
 	return buf.Bytes()
+}
+
+func (r *RackRequest) WriteTo(w io.WriteCloser) error {
+	if _, err := w.Write(r.Bytes()); err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(w, r.Request.Body); err != nil {
+		return err
+	}
+
+	w.Close()
+
+	return nil
 }
