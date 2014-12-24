@@ -20,7 +20,7 @@ type RackResponse struct {
 	Body         io.Reader
 }
 
-func NewResponse(r io.Reader) *RackResponse {
+func NewRackResponse(r io.Reader) *RackResponse {
 	return &RackResponse{rackResponse: r}
 }
 

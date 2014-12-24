@@ -86,7 +86,7 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Println("[Error] writing request body:", err)
 	}
 
-	resp := NewResponse(res_reader)
+	resp := NewRackResponse(res_reader)
 	if err := resp.WriteTo(w); err != nil {
 		log.Println("[Error] writing response:", err.Error())
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
