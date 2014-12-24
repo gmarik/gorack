@@ -1,22 +1,22 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
-	"os"
 
 	"./gorack"
 )
 
 func main() {
 
-	if len(os.Args) == 1 {
-		log.Fatal("specify path to config.ru file")
-	}
+	var (
+		config_path    *string = flag.String("config", "./config.ru", "rack config file")
+		listen_address *string = flag.String("address", "localhost:3000", "address to listen at")
+	)
 
-	config_path := os.Args[1]
+	flag.Parse()
 
-	address := "localhost:3001"
-	log.Print("Starting on:", address)
-	log.Fatal(http.ListenAndServe(address, gorack.NewRackHandler(config_path)))
+	log.Print("Listening at ", *listen_address)
+	log.Fatal(http.ListenAndServe(*listen_address, gorack.NewRackHandler(*config_path)))
 }
