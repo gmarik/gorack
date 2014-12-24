@@ -3,10 +3,12 @@ package gorack
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 )
 
 type RackRequest struct {
+	Request        *http.Request
 	REQUEST_METHOD string
 	SCRIPT_NAME    string
 	PATH_INFO      string
@@ -18,6 +20,7 @@ type RackRequest struct {
 
 func NewRackRequest(r *http.Request, serverName, serverPort string) *RackRequest {
 	return &RackRequest{
+		Request:        r,
 		REQUEST_METHOD: r.Method,
 		SCRIPT_NAME:    r.URL.Path,
 		PATH_INFO:      r.URL.Path,
@@ -48,4 +51,18 @@ func (r *RackRequest) Bytes() []byte {
 	buf.WriteString(delim)
 
 	return buf.Bytes()
+}
+
+func (r *RackRequest) WriteTo(w io.WriteCloser) error {
+	if _, err := w.Write(r.Bytes()); err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(w, r.Request.Body); err != nil {
+		return err
+	}
+
+	w.Close()
+
+	return nil
 }

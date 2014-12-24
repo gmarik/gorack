@@ -1,7 +1,6 @@
 package gorack
 
 import (
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -83,37 +82,14 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rackReq := NewRackRequest(r, "server", "port")
-
-	req_writer.Write(rackReq.Bytes())
-
-	if _, err = io.Copy(req_writer, r.Body); err != nil {
-		log.Println("Error writing request body:", err)
+	if err := rackReq.WriteTo(req_writer); err != nil {
+		log.Println("[Error] writing request body:", err)
 	}
 
-	req_writer.Close()
-
-	// resp := NewResponse(io.TeeReader(res_reader, os.Stdout))
 	resp := NewResponse(res_reader)
-
-	if err := resp.Parse(); err != nil {
-		log.Println("Error:", err.Error())
+	if err := resp.WriteTo(w); err != nil {
+		log.Println("[Error] writing response:", err.Error())
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
-
-	for name, values := range resp.Headers {
-		for _, val := range values {
-			// fmt.Println(name, val)
-			w.Header().Add(name, val)
-		}
-	}
-
-	w.WriteHeader(resp.StatusCode)
-
-	_, err = io.Copy(w, resp.Body)
-
-	if err != nil {
-		log.Fatal(err)
 	}
 }
 

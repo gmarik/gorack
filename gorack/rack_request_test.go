@@ -39,6 +39,7 @@ func TestRackRequest(t *testing.T) {
 	r := &http.Request{Method: "GET", URL: url}
 
 	exp := testRequest
+	exp.Request = r
 	got := NewRackRequest(r, "server", "port")
 
 	if !reflect.DeepEqual(got, exp) {

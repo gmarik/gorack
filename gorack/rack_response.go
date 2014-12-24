@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -103,4 +104,23 @@ func parseHeaders(buf io.Reader) (int, map[string][]string, error) {
 	}
 
 	return code, hdrs, nil
+}
+
+func (r *RackResponse) WriteTo(w http.ResponseWriter) error {
+	if err := r.Parse(); err != nil {
+		return err
+	}
+
+	for name, values := range r.Headers {
+		for _, val := range values {
+			// fmt.Println(name, val)
+			w.Header().Add(name, val)
+		}
+	}
+
+	w.WriteHeader(r.StatusCode)
+
+	_, err := io.Copy(w, r.Body)
+
+	return err
 }
