@@ -4,6 +4,10 @@
 [x] create test to serve response(s)
 [x] submit request body as well
 [ ] submit request headers (go) and parse them properly(rack)
+[ ] io.Copy request body in separate goroutine: doesn't block response if it's too big
+
+## Ruby: Error handling
+[ ] ensure master process is resilient: handle response write failures
 
 ## Logging
 [x] use loggers in both go server and ruby server
