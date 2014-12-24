@@ -41,5 +41,5 @@ func TestRackHandler(t *testing.T) {
 }
 
 func TestIpcEcho(t *testing.T) {
-	t.SkipNow()
+	t.Error("implement test to verify headers are properly transmitted to rack app")
 }
