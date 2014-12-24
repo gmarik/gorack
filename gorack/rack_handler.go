@@ -118,25 +118,11 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func runProcessMaster(cmd *exec.Cmd) {
-	var err error
-	var out, outerr io.Reader
+	cmd.Stdin = nil
+	cmd.Stdout = NewLogWriter(os.Stdout, "", log.LstdFlags)
+	cmd.Stderr = NewLogWriter(os.Stderr, "[StdErr]", log.LstdFlags)
 
-	if out, err = cmd.StdoutPipe(); err != nil {
-		log.Fatal(err)
-	}
-
-	if outerr, err = cmd.StderrPipe(); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-	}
-
-	go io.Copy(NewLogWriter(os.Stdout, "", log.LstdFlags), out)
-	go io.Copy(NewLogWriter(os.Stderr, "[StdErr]", log.LstdFlags), outerr)
-
-	if err = cmd.Wait(); err != nil {
-		log.Fatal(err)
+	if err := cmd.Run(); err != nil {
+		log.Fatal("Process '", cmd.Path, "' - failed to run:", err)
 	}
 }
