@@ -20,7 +20,7 @@ module Gorack
     end
 
     def self.log(msg)
-      STDOUT.puts("[Master] #{msg}")
+      STDOUT.puts("[PID:#{Process.pid}] #{msg}")
     end
 
     attr_accessor :config, :app, :file
