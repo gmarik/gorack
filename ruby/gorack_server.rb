@@ -78,8 +78,8 @@ private
       status, headers, body = *resp
 
       writer.write("#{status}#{DELIM}")
-      writer.write(headers.map {|k, v| "#{k}: #{v}"}.join(DELIM))
-      writer.write(DELIM * 2)
+      writer.write(headers.map {|k, v| "#{k}: #{v}#{DELIM}"}.join(''))
+      writer.write(DELIM)
       # TODO: use IO.copy_stream
       body.each(&writer.method(:write))
       writer.close
