@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
 )
 
@@ -37,8 +38,15 @@ func (rr *RackRequest) Bytes() []byte {
 		{"SERVER_PORT", rr.SERVER_PORT},
 	}
 
-	for k, vals := range r.Header {
-		items = append(items, kval{k, strings.Join(vals, "; ")})
+	// sort keys so order is predictable
+	keys := make([]string, 0)
+	for k, _ := range r.Header {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		items = append(items, kval{k, strings.Join(r.Header[k], "; ")})
 	}
 
 	buf := &bytes.Buffer{}
