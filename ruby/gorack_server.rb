@@ -63,6 +63,7 @@ module Gorack
 
       rescue => e
         log("ERROR: " + e.message)
+        log("ERROR: " + e.backtrace.join("\n"))
         status  = 500
         headers = {'Content-Type' => 'text/plain' }
         body    = ["Internal Server Error"]
