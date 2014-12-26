@@ -12,7 +12,7 @@ rescue LoadError => e
 end
 
 require 'socket'
-require_relative '../lib/gorack_server'
+require_relative '../lib/gorack.rb'
 
 # descriptor inherited from parent process
 master_sock = UNIXSocket.for_fd(3)
