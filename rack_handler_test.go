@@ -15,8 +15,8 @@ var echoBody = `{"REQUEST_METHOD"=>"POST", "SCRIPT_NAME"=>"/", "PATH_INFO"=>"/",
 func TestRackHandler(t *testing.T) {
 
 	var cases = []struct{ in, exp, script string }{
-		{testBody, testBody, "../ruby/test/config_test.ru"},
-		{testBody, echoBody, "../ruby/test/echo.ru"},
+		{testBody, testBody, "./ruby/test/config_test.ru"},
+		{testBody, echoBody, "./ruby/test/echo.ru"},
 	}
 
 	for _, v := range cases {
@@ -30,7 +30,7 @@ func TestRackHandler(t *testing.T) {
 
 func submit(body string, rackScript string, t *testing.T) string {
 	// package variable
-	gorackRunner = "../ruby/bin/gorack"
+	gorackRunner = "./ruby/bin/gorack"
 
 	ts := httptest.NewServer(NewRackHandler(rackScript))
 	defer ts.Close()

@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"./gorack"
+	gorack "../"
 )
 
 func main() {
