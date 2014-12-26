@@ -11,7 +11,7 @@ rescue => e
   STDERR.puts e.message
 end
 
-require_relative './gorack_server'
+require_relative '../lib/gorack_server'
 
 # descriptor inherited from parent process
 master_sock = UNIXSocket.for_fd(3)

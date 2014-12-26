@@ -10,7 +10,7 @@ import (
 	"../ipcio"
 )
 
-var gorackRunner = "./ruby/gorack"
+var gorackRunner = "./ruby/bin/gorack"
 
 type RackHandler struct {
 	local_fd   int
