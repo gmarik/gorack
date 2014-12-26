@@ -7,7 +7,7 @@ begin
   require 'rubygems'
   require 'bundler'
   require 'bundler/setup'
-rescue => e
+rescue LoadError => e
   STDERR.puts e.message
 end
 
