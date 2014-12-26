@@ -1,5 +1,3 @@
-require 'fcntl'
-require 'socket'
 require 'stringio'
 require 'rack'
 require 'rack/builder'

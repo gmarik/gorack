@@ -11,6 +11,7 @@ rescue LoadError => e
   STDERR.puts e.message
 end
 
+require 'socket'
 require_relative '../lib/gorack_server'
 
 # descriptor inherited from parent process
