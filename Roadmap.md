@@ -3,7 +3,7 @@
 ## gorack_server test
 [x] create test to serve response(s)
 [x] submit request body as well
-[ ] submit request headers (go) and parse them properly(rack)
+[x] submit request headers (go) and parse them properly(rack)
 [ ] io.Copy request body in separate goroutine: doesn't block response if it's too big
 
 ## Ruby: Error handling
