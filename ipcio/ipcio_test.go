@@ -5,7 +5,6 @@ package ipcio
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -33,9 +32,8 @@ func TestIpcIo(t *testing.T) {
 	fmt.Println("Running:", path)
 
 	cmd := exec.Command("ruby", path)
-
-	out, _ := cmd.StdoutPipe()
-	errout, _ := cmd.StderrPipe()
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
 	if err != nil {
 		log.Fatal(err)
@@ -48,9 +46,6 @@ func TestIpcIo(t *testing.T) {
 		log.Fatal("Error running process", err)
 	}
 
-	go io.Copy(os.Stdout, out)
-	go io.Copy(os.Stderr, errout)
-
 	ch := make(chan string)
 
 	// TODO: investigate: sometimes takes too long
@@ -59,9 +54,7 @@ func TestIpcIo(t *testing.T) {
 	expected := "hello"
 	ch <- expected
 
-	err = cmd.Wait()
-
-	log.Println("Program exited with", err)
+	log.Println("Program exited with", cmd.Wait())
 
 	received := <-ch
 
