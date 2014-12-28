@@ -44,9 +44,8 @@ func TestIpcIo(t *testing.T) {
 	ch := make(chan string)
 	expected := "hello"
 
-	// TODO: investigate: sometimes takes too long
-	go ipcEcho(local, ch, t)
-	go func() { t.Error(cmd.Run()) }()
+	go ipcEcho(local, ch, t)           // sends data to a child process
+	go func() { t.Error(cmd.Run()) }() // runs the child process
 
 	// send data to proces
 	ch <- expected
