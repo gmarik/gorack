@@ -4,7 +4,6 @@ package ipcio
 // go test -v gorack/sock_reader_test.go
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -33,7 +32,7 @@ func TestIpcIo(t *testing.T) {
 
 	var remote, local = pair[0], pair[1]
 
-	fmt.Println("Running:", path)
+	log.Println("Running:", path)
 
 	cmd := exec.Command("ruby", path)
 	cmd.Stdout = os.Stdout
@@ -59,33 +58,34 @@ func TestIpcIo(t *testing.T) {
 }
 
 func ipcEcho(fd int, ch chan string, t *testing.T) {
-	r, w, err := os.Pipe()
+	var r, w *os.File
+	var err error
 
-	if err != nil {
+	if r, w, err = os.Pipe(); err != nil {
 		t.Error(err)
 	}
 
-	err = SendIo(fd, r)
+	// send pipe's reader to a process
+	// so the process can read data from it
+	if err = SendIo(fd, r); err != nil {
+		t.Error(err)
+	}
+
 	w.Write([]byte(<-ch))
 	w.Close()
 
-	if err != nil {
+	var file *os.File
+	var data []byte
+
+	// receives a reader to read reply from the process
+	if file, err = RecvIo(fd); err != nil {
 		t.Error(err)
 	}
 
-	defer close(ch)
-
-	file, err := RecvIo(fd)
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	data, err := ioutil.ReadAll(file)
-
-	if err != nil {
+	if data, err = ioutil.ReadAll(file); err != nil {
 		t.Error(err)
 	}
 
 	ch <- string(data)
+	close(ch)
 }
