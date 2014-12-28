@@ -16,46 +16,42 @@ import (
 	"testing"
 )
 
+func currentPath() string {
+	_, filename, _, _ := runtime.Caller(0)
+	return path.Dir(filename)
+}
+
 func TestIpcIo(t *testing.T) {
-	fmt.Println("Creating Socket")
+	log.Println("Creating Socket")
 	pair, err := syscall.Socketpair(syscall.AF_LOCAL, syscall.SOCK_STREAM, 0)
 
-	var remote, local = pair[0], pair[1]
-
 	if err != nil {
-		log.Fatal(err)
+		t.Error(err)
 	}
 
-	_, filename, _, _ := runtime.Caller(0)
-	path := path.Join(path.Dir(filename), "ipcio_test.rb")
+	path := path.Join(currentPath(), "ipcio_test.rb")
+
+	var remote, local = pair[0], pair[1]
 
 	fmt.Println("Running:", path)
 
 	cmd := exec.Command("ruby", path)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// child process' FDs start from 3 (0, 1, 2)
 	cmd.ExtraFiles = []*os.File{os.NewFile(uintptr(remote), "reader")}
 
-	if err := cmd.Start(); err != nil {
-		log.Fatal("Error running process", err)
-	}
-
 	ch := make(chan string)
+	expected := "hello"
 
 	// TODO: investigate: sometimes takes too long
 	go ipcEcho(local, ch, t)
+	go func() { t.Error(cmd.Run()) }()
 
-	expected := "hello"
+	// send data to proces
 	ch <- expected
 
-	log.Println("Program exited with", cmd.Wait())
-
+	// read data from process
 	received := <-ch
 
 	if !reflect.DeepEqual(received, expected) {
