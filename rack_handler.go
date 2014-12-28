@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"syscall"
 
-	"./ipcio"
+	"gmarik/gorack/ipcio"
 )
 
 var gorackRunner = "./ruby/bin/gorack"
