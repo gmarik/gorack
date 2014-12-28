@@ -78,8 +78,8 @@ func ipcEcho(fd int, ch chan string, t *testing.T) {
 	}
 
 	err = SendIo(fd, r)
-
 	w.Write([]byte(<-ch))
+	w.Close()
 
 	if err != nil {
 		t.Error(err)

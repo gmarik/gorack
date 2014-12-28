@@ -16,6 +16,7 @@ local_r, local_w = IO.pipe
 
 log "sending the pipe"
 sock.send_io(local_r)
+local_r.close
 
 log "copying stream"
 IO.copy_stream(remote_r, local_w)
