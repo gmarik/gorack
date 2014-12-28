@@ -62,34 +62,31 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// TODO: make it safe for concurrency
 func (s *RackHandler) sendIo() (*os.File, *os.File, error) {
 
-	req_reader, req_writer, err := os.Pipe()
+	var req_reader, req_writer *os.File
+	var res_reader, res_writer *os.File
+	var err error
 
-	if err != nil {
+	if req_reader, req_writer, err = os.Pipe(); err != nil {
 		return nil, nil, err
 	}
 
-	res_reader, res_writer, err := os.Pipe()
-
-	if err != nil {
+	if res_reader, res_writer, err = os.Pipe(); err != nil {
 		return nil, nil, err
 	}
 
-	err = ipcio.SendIo(s.local_fd, req_reader)
-
-	if err != nil {
+	if err = ipcio.SendIo(s.local_fd, req_reader); err != nil {
 		return nil, nil, err
 	}
 
-	err = ipcio.SendIo(s.local_fd, res_writer)
-
-	if err != nil {
+	if err = ipcio.SendIo(s.local_fd, res_writer); err != nil {
 		return nil, nil, err
 	}
 
-	// close pipes once FDs sent to a process
-	// they'll still be open in the process
+	// close pipes once FDs sent to a child process
+	// they'll still be open in the child process
 	req_reader.Close()
 	res_writer.Close()
 
