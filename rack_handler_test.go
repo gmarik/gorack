@@ -30,7 +30,7 @@ func TestRackHandler(t *testing.T) {
 
 func submit(body string, rackScript string, t *testing.T) string {
 	// package variable
-	gorackRunner = "./ruby/bin/gorack"
+	gorackRunner = "./ruby/libexec/gorack"
 
 	ts := httptest.NewServer(NewRackHandler(rackScript))
 	defer ts.Close()
