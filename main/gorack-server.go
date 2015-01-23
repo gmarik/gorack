@@ -4,11 +4,15 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
+	"path"
 
 	"github.com/gmarik/gorack"
 )
 
 func main() {
+
+	gorack.GorackRunner = path.Join(path.Dir(os.Args[0]), "gorack")
 
 	var (
 		config_path    *string = flag.String("config", "./config.ru", "rack config file")
