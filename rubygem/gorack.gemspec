@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.version = "0.0.1"
   s.authors = ["http://github.com/gmarik"]
   s.homepage = "http://github.com/gmarik/example"
-  s.summary = "Golang HTTP frontend for Ruby's Rack Applications"
+  s.summary = "Golang HTTP frontend server for Ruby's Rack Applications"
   s.description = "#{s.summary}. "
   # s.cert_chain = nil
   s.email = "Z21hcmlrQGdtYWlsLmNvbQ==\n".unpack('m').first
