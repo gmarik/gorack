@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+
+# vim: set ft=ruby:
+
+
+def exec(exec_path, args)
+  path = File.expand_path(File.join(File.expand_path('../', __FILE__), exec_path))
+  Kernel.exec(path, *args)
+end
+
+case `uname`
+when /darwin/i then exec("../libexec/darwin_gorack", ARGV)
+#when /linux/i then exec("../libexec/linux_gorack", ARGV)
+else
+  raise 'Oops, unsupported platform'
+end
+
