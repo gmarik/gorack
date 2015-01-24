@@ -7,7 +7,10 @@ require 'rack'
 require 'socket'
 require_relative '../lib/gorack.rb'
 
-# descriptor inherited from parent process
-master_sock = UNIXSocket.for_fd(3)
+app, app_options = Rack::Builder.parse_file(ARGV[0])
 
-Gorack::Server.run(master_sock, ARGV[0])
+Gorack::Server.run(
+  UNIXSocket.for_fd(3), # IO descriptor inherited from parent process
+  app,
+  app_options
+)

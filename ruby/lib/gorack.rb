@@ -34,9 +34,9 @@ module Gorack
       pipe
     end
 
-    def initialize(master_sock, config_file, options = {})
+    def initialize(master_sock, app, app_options)
       @master_io = master_sock
-      @app, @app_options = Rack::Builder.parse_file(config_file)
+      @app, @app_options = app, app_options
     end
 
     def log(msg)
