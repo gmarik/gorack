@@ -3,14 +3,7 @@
 
 STDOUT.sync = STDERR.sync = true
 
-begin
-  require 'rubygems'
-  require 'bundler'
-  require 'bundler/setup'
-rescue LoadError => e
-  STDERR.puts e.message
-end
-
+require 'rack'
 require 'socket'
 require_relative '../lib/gorack.rb'
 
