@@ -15,6 +15,7 @@ var GorackRunner = "./ruby/libexec/gorack"
 type RackHandler struct {
 	local_fd   int
 	configPath string
+	cmd        *exec.Cmd
 }
 
 func NewRackHandler(configPath string) *RackHandler {
@@ -32,11 +33,10 @@ func NewRackHandler(configPath string) *RackHandler {
 	cmd := exec.Command(GorackRunner, configPath)
 	cmd.ExtraFiles = []*os.File{fd}
 
-	go spawnRackProcess(cmd)
-
 	return &RackHandler{
 		local_fd:   local,
 		configPath: configPath,
+		cmd:        cmd,
 	}
 }
 
@@ -93,12 +93,15 @@ func (s *RackHandler) sendIo() (*os.File, *os.File, error) {
 	return res_reader, req_writer, nil
 }
 
-func spawnRackProcess(cmd *exec.Cmd) {
+func (s *RackHandler) StartRackProcess() error {
+	cmd := s.cmd
 	cmd.Stdin = nil
 	cmd.Stdout = NewLogWriter(os.Stdout, "", log.LstdFlags)
 	cmd.Stderr = NewLogWriter(os.Stderr, "[StdErr]", log.LstdFlags)
 
-	if err := cmd.Run(); err != nil {
-		log.Fatal("Process '", cmd.Path, "' - failed to run:", err)
-	}
+	return cmd.Start()
+}
+
+func (s *RackHandler) StopRackProcess() error {
+	return s.cmd.Process.Signal(syscall.SIGTERM)
 }

@@ -32,7 +32,15 @@ func submit(body string, rackScript string, t *testing.T) string {
 	// package variable
 	GorackRunner = "./ruby/libexec/gorack"
 
-	ts := httptest.NewServer(NewRackHandler(rackScript))
+	handler := NewRackHandler(rackScript)
+
+	if err := handler.StartRackProcess(); err != nil {
+		t.Error(err)
+	}
+
+	ts := httptest.NewServer(handler)
+
+	defer handler.StopRackProcess()
 	defer ts.Close()
 
 	res, err := http.Post(ts.URL, "text/plain", strings.NewReader(body))
@@ -42,8 +50,8 @@ func submit(body string, rackScript string, t *testing.T) string {
 
 	got, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
-
 	if err != nil {
+
 		t.Error(err)
 	}
 
