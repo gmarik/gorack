@@ -5,12 +5,22 @@ STDOUT.sync = STDERR.sync = true
 
 require 'rack'
 require 'socket'
+require 'logger'
 require_relative '../lib/gorack.rb'
 
-app, app_options = Rack::Builder.parse_file(ARGV[0])
+logger = Logger.new(STDOUT)
+logger.formatter = proc do |severity, datetime, progname, msg|
+  "[PID:#{Process.pid}] #{msg}\n"
+end
 
-Gorack::Server.run(
+app, app_options = Rack::Builder.parse_file(ARGV[0])
+server = Gorack::Server.new(
   UNIXSocket.for_fd(3), # IO descriptor inherited from parent process
   app,
-  app_options
+  app_options,
+  logger
 )
+
+at_exit { server.exit }
+
+server.run

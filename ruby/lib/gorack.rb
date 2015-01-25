@@ -7,23 +7,29 @@ module Gorack
 
     DELIM = "\0" # response/request delimiter
 
-    def self.run(*args)
-      log("Waiting for connections")
-      s = new(*args)
+    attr_accessor :master_io, :app, :logger
+    def initialize(master_sock, app, app_options, logger)
+      @master_io = master_sock
+      @app, @app_options = app, app_options
+      @logger = logger
+      @pids = []
+    end
+
+    def run
+      logger.info("Accepting connections")
       loop {
-        s.accept do |reader, writer|
-          Process.fork { s.handle(reader, writer) }
+        accept do |reader, writer|
+          add_pid Process.fork { handle(reader, writer) }
         end
+
+        reap
       }
     end
 
-    def self.log(msg)
-      STDOUT.puts("[PID:#{Process.pid}] #{msg}")
+    def exit
+      logger.info("Exiting")
+      Process.waitall unless @pids.empty?
     end
-
-    attr_accessor :config, :app, :file
-    attr_accessor :ppid, :server, :heartbeat
-    attr_accessor :master_io
 
     def accept(&block)
       pipe = master_io.recv_io, master_io.recv_io
@@ -34,13 +40,16 @@ module Gorack
       pipe
     end
 
-    def initialize(master_sock, app, app_options)
-      @master_io = master_sock
-      @app, @app_options = app, app_options
+    def add_pid(pid)
+      @pids.push(pid)
     end
 
-    def log(msg)
-      self.class.log(msg)
+    def reap
+      new_pids = []
+      while pid = @pids.pop
+        Process.waitpid(pid, Process::WNOHANG) or new_pids.push(pid)
+      end
+      @pids = new_pids
     end
 
     def handle(reader, writer)
@@ -60,8 +69,8 @@ module Gorack
         status, headers, body = app.call(rack_env)
 
       rescue => e
-        log("ERROR: " + e.message)
-        log("ERROR: " + e.backtrace.join("\n"))
+        logger.info("ERROR: " + e.message)
+        logger.info("ERROR: " + e.backtrace.join("\n"))
         status  = 500
         headers = {'Content-Type' => 'text/plain' }
         body    = ["Internal Server Error"]
