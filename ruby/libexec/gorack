@@ -21,6 +21,8 @@ server = Gorack::Server.new(
   logger
 )
 
-at_exit { server.exit }
+ppid = Process.pid
+
+at_exit { server.exit if ppid == Process.pid }
 
 server.run
