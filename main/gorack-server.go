@@ -22,5 +22,9 @@ func main() {
 	flag.Parse()
 
 	log.Print("Listening at ", *listen_address)
-	log.Fatal(http.ListenAndServe(*listen_address, gorack.NewRackHandler(*config_path)))
+	handler := gorack.NewRackHandler(*config_path)
+	if err := handler.StartRackProcess(); err != nil {
+		log.Fatal(err)
+	}
+	log.Fatal(http.ListenAndServe(*listen_address, handler))
 }
