@@ -36,4 +36,7 @@ gemfile:
 build: clean prep copyfiles binaries gemfile
 	echo
 
+install:test build
+	gem install ${BUILDDIR}/ruby/gorack-*.gem
+
 .PHONY: all help clean build
