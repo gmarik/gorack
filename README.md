@@ -14,8 +14,13 @@ An experiment; inspired by [nodejs]' [nack]
 # How To
 ## Get Up And Running
 
-1. gem install gorack
-2. gorack -config ./path/to/config.ru
+1. `gem install gorack`
+2. `gorack -config ./path/to/config.ru` 
+
+ie:
+
+1. `gorack -config=$(dirname $(gem which gorack))/../test/echo.ru`
+2. `open http://localhost:3000`
 
 ## Develop
 
