@@ -50,7 +50,6 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	host, port, err := net.SplitHostPort(r.Host)
-	log.Println("Address", r.URL.String(), host, port)
 
 	if err != nil {
 		log.Println("[Error] parsing request url:", err.Error())
