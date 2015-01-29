@@ -111,7 +111,10 @@ private
       env = Hash[*lines.flat_map {|l| l.split(": ", 2)}]
 
       # reader is at body start or EOF
-      [env, reader]
+      # TODO: this assumes that body is not a stream
+      body = StringIO.new(reader.read)
+
+      [env, body]
     end
 
   end
