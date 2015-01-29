@@ -89,7 +89,9 @@ private
       writer.write(DELIM)
       # TODO: use IO.copy_stream
       body.each(&writer.method(:write))
+    ensure
       writer.close
+      body.close if body.respond_to?(:close)
     end
 
     def read_request(reader)
