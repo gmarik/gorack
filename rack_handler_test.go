@@ -1,16 +1,18 @@
 package gorack
 
 import (
-	"bytes"
 	"io/ioutil"
+	"log"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 )
 
 var testBody = "OMG\x00, test body\nhalps"
-var echoBody = `{"REQUEST_METHOD"=>"POST", "SCRIPT_NAME"=>"/", "PATH_INFO"=>"/", "QUERY_STRING"=>"", "SERVER_NAME"=>"server", "SERVER_PORT"=>"port", "Accept-Encoding"=>"gzip", "Content-Length"=>"21", "Content-Type"=>"text/plain", "User-Agent"=>"Go 1.1 package http"}` + testBody
+var echoBody = `{"REQUEST_METHOD"=>"POST", "SCRIPT_NAME"=>"/", "PATH_INFO"=>"/", "QUERY_STRING"=>"", "SERVER_NAME"=>"host", "SERVER_PORT"=>"port", "Accept-Encoding"=>"gzip", "Content-Length"=>"21", "Content-Type"=>"text/plain", "User-Agent"=>"Go 1.1 package http"}` + testBody
 
 func TestRackHandler(t *testing.T) {
 
@@ -20,15 +22,21 @@ func TestRackHandler(t *testing.T) {
 	}
 
 	for _, v := range cases {
-		exp, got := v.exp, submit(v.in, v.script, t)
+		exp := v.exp
+		got, host, port := submit(v.in, v.script, t)
 
-		if !bytes.Equal([]byte(exp), []byte(got)) {
-			t.Errorf("\nGot:%s\nExp:%s", []byte(got), []byte(exp))
+		if echoBody == v.exp {
+			exp = strings.Replace(v.exp, `=>"port"`, `=>"`+port+`"`, -1)
+			exp = strings.Replace(exp, `=>"host"`, `=>"`+host+`"`, -1)
+		}
+
+		if exp != got {
+			t.Errorf("\nGot:%s\nExp:%s", got, exp)
 		}
 	}
 }
 
-func submit(body string, rackScript string, t *testing.T) string {
+func submit(body string, rackScript string, t *testing.T) (string, string, string) {
 	// package variable
 	GorackRunner = "./ruby/libexec/gorack"
 
@@ -39,6 +47,8 @@ func submit(body string, rackScript string, t *testing.T) string {
 	}
 
 	ts := httptest.NewServer(handler)
+
+	log.Println(ts.URL)
 
 	defer handler.StopRackProcess()
 	defer ts.Close()
@@ -55,5 +65,9 @@ func submit(body string, rackScript string, t *testing.T) string {
 		t.Error(err)
 	}
 
-	return string(got)
+	u, _ := url.Parse(ts.URL)
+
+	host, port, _ := net.SplitHostPort(u.Host)
+
+	return string(got), host, port
 }

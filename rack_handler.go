@@ -2,6 +2,7 @@ package gorack
 
 import (
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -48,7 +49,15 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rackReq := NewRackRequest(r, "server", "port")
+	host, port, err := net.SplitHostPort(r.Host)
+	log.Println("Address", r.URL.String(), host, port)
+
+	if err != nil {
+		log.Println("[Error] parsing request url:", err.Error())
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+	}
+
+	rackReq := NewRackRequest(r, host, port)
 	go func() {
 		if err := rackReq.WriteTo(req_writer); err != nil {
 			log.Println("[Error] writing request body:", err)
