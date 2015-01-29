@@ -34,6 +34,7 @@ module Gorack
     def accept(&block)
       pipe = master_io.recv_io, master_io.recv_io
       if block
+        pipe.each {|p| p.set_encoding(Encoding::BINARY) }
         block.call(*pipe)
         pipe.each(&:close)
       end
