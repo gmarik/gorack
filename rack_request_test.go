@@ -23,9 +23,9 @@ var (
 		"QUERY_STRING: query=param1" + delim +
 		"SERVER_NAME: server" + delim +
 		"SERVER_PORT: port" + delim +
-		"Accept-Encoding: gzip, deflate" + delim +
-		"Accept-Language: da, en-gb; q=0.8, en" + delim +
-		"Connection: keep-alive" + delim +
+		"HTTP_ACCEPT_ENCODING: gzip, deflate" + delim +
+		"HTTP_ACCEPT_LANGUAGE: da, en-gb; q=0.8, en" + delim +
+		"HTTP_CONNECTION: keep-alive" + delim +
 		delim
 
 	headers = map[string][]string{

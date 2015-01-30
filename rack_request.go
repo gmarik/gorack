@@ -46,7 +46,7 @@ func (rr *RackRequest) Bytes() []byte {
 	sort.Strings(keys)
 
 	for _, k := range keys {
-		items = append(items, kval{k, strings.Join(r.Header[k], "; ")})
+		items = append(items, kval{http_header(k), strings.Join(r.Header[k], "; ")})
 	}
 
 	buf := &bytes.Buffer{}
@@ -72,4 +72,9 @@ func (r *RackRequest) WriteTo(w io.WriteCloser) error {
 	w.Close()
 
 	return nil
+}
+
+func http_header(name string) string {
+	name = strings.Replace(name, "-", "_", -1)
+	return "HTTP_" + strings.ToUpper(name)
 }

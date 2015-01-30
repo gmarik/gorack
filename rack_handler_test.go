@@ -12,7 +12,7 @@ import (
 )
 
 var testBody = "OMG\x00, test body\nhalps"
-var echoBody = `{"REQUEST_METHOD"=>"POST", "SCRIPT_NAME"=>"", "PATH_INFO"=>"/", "QUERY_STRING"=>"", "SERVER_NAME"=>"host", "SERVER_PORT"=>"port", "Accept-Encoding"=>"gzip", "Content-Length"=>"21", "Content-Type"=>"text/plain", "User-Agent"=>"Go 1.1 package http"}` + testBody
+var echoBody = `{"REQUEST_METHOD"=>"POST", "SCRIPT_NAME"=>"", "PATH_INFO"=>"/", "QUERY_STRING"=>"", "SERVER_NAME"=>"host", "SERVER_PORT"=>"port", "HTTP_ACCEPT_ENCODING"=>"gzip", "HTTP_CONTENT_LENGTH"=>"21", "HTTP_CONTENT_TYPE"=>"text/plain", "HTTP_USER_AGENT"=>"Go 1.1 package http"}` + testBody
 
 func TestRackHandler(t *testing.T) {
 
