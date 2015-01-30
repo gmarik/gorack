@@ -2,7 +2,7 @@ GOPATH := $(GOPATH)
 BUILDDIR := ./build
 
 # target: all - Run tests and generate binary
-all: test build
+all: help
 
 # target: help - Display targets
 help:
@@ -29,14 +29,16 @@ copyfiles:
 binaries:
 	GOARCH=amd64 GOOS=darwin go build -o ${BUILDDIR}/ruby/libexec/darwin_gorack main/gorack-server.go
 
-gemfile:
+# target: gemfile - builds gemfile from gemspec
+gemfile: build
 	cd ${BUILDDIR}/ruby/ && gem build gorack.gemspec
 
 # target: build - Build CLI binary
-build: clean prep copyfiles binaries gemfile
+build: clean prep copyfiles binaries
 	echo
 
-install:test build
+# target: gem_install - builds and `gem install`s gemfile
+gem_install: gemfile
 	gem install ${BUILDDIR}/ruby/gorack-*.gem
 
 .PHONY: all help clean build
