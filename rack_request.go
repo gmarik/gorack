@@ -31,7 +31,7 @@ func (rr *RackRequest) Bytes() []byte {
 
 	items := []kval{
 		{"REQUEST_METHOD", r.Method},
-		{"SCRIPT_NAME", r.URL.Path},
+		{"SCRIPT_NAME", ""}, // TODO: buil properly
 		{"PATH_INFO", r.URL.Path},
 		{"QUERY_STRING", r.URL.RawQuery},
 		{"SERVER_NAME", rr.SERVER_NAME},

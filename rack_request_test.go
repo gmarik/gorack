@@ -18,7 +18,7 @@ var (
 
 	testRequestString = "" +
 		"REQUEST_METHOD: GET" + delim +
-		"SCRIPT_NAME: /path/script.ext" + delim +
+		"SCRIPT_NAME: " + delim +
 		"PATH_INFO: /path/script.ext" + delim +
 		"QUERY_STRING: query=param1" + delim +
 		"SERVER_NAME: server" + delim +
