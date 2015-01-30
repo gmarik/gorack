@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"reflect"
 	"strings"
@@ -35,21 +36,29 @@ func TestResponseParse(t *testing.T) {
 	r := NewRackResponse(strings.NewReader(response))
 
 	result := map[string][]string{
-		"Server":         []string{"nginx/1.6.0"},
-		"Content-Type":   []string{"text/html"},
-		"Content-Length": []string{"0"},
 		"Last-Modified":  []string{"Sat, 06 Sep 2014 15:37:58 GMT"},
 		"Date":           []string{"Wed, 26 Nov 2014 23:49:32 GMT"},
 		"Connection":     []string{"keep-alive"},
-		"Set-Cookie":     []string{"UserID=JohnDoe", "Max-Age=3600", "Version=1"},
+		"Set-Cookie":     []string{"UserID=JohnDoe; Max-Age=3600; Version=1"},
+		"Server":         []string{"nginx/1.6.0"},
+		"Content-Type":   []string{"text/html"},
+		"Content-Length": []string{"0"},
+	}
+
+	headers := http.Header{}
+
+	for name, values := range result {
+		for _, v := range values {
+			headers.Add(name, v)
+		}
 	}
 
 	if err := r.Parse(); err != nil {
 		t.Error(err)
 	}
 
-	if !reflect.DeepEqual(r.Headers, result) {
-		t.Errorf("\nExp %s,\nGot %s", result, r.Headers)
+	if !reflect.DeepEqual(r.Headers, headers) {
+		t.Errorf("\nExp %s,\nGot %s", headers, r.Headers)
 	}
 
 	if r.StatusCode != 200 {

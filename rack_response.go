@@ -15,7 +15,7 @@ const delim = "\x00"
 
 type RackResponse struct {
 	rackResponse io.Reader
-	Headers      map[string][]string
+	Headers      http.Header
 	StatusCode   int
 	Body         io.Reader
 }
@@ -74,7 +74,7 @@ func (r *RackResponse) Parse() error {
 	return nil
 }
 
-func parseHeaders(buf io.Reader) (int, map[string][]string, error) {
+func parseHeaders(buf io.Reader) (int, http.Header, error) {
 	headers, err := ioutil.ReadAll(buf)
 
 	if err != nil {
@@ -90,7 +90,7 @@ func parseHeaders(buf io.Reader) (int, map[string][]string, error) {
 		return 0, nil, err
 	}
 
-	hdrs := make(map[string][]string)
+	hdrs := http.Header{}
 
 	for _, line := range lines[1:] {
 		hdr := string(line)
@@ -100,7 +100,7 @@ func parseHeaders(buf io.Reader) (int, map[string][]string, error) {
 		}
 
 		kvs := strings.SplitN(hdr, ": ", 2)
-		hdrs[kvs[0]] = strings.Split(kvs[1], "; ")
+		hdrs.Add(kvs[0], kvs[1])
 	}
 
 	return code, hdrs, nil
@@ -110,12 +110,10 @@ func (r *RackResponse) WriteTo(w http.ResponseWriter) error {
 	if err := r.Parse(); err != nil {
 		return err
 	}
-
-	for name, values := range r.Headers {
-		for _, val := range values {
-			// fmt.Println(name, val)
-			w.Header().Add(name, val)
-		}
+	headers := w.Header()
+	for name, _ := range r.Headers {
+		//TODO: add test
+		headers.Set(name, r.Headers.Get(name))
 	}
 
 	w.WriteHeader(r.StatusCode)
