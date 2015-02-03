@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 
 	"github.com/gmarik/gorack/ipcio"
@@ -49,12 +50,16 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	host, port, err := net.SplitHostPort(r.Host)
+	host, port := r.Host, "80"
 
-	if err != nil {
-		log.Println("[Error] parsing request url:", err.Error())
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
+	if strings.Contains(r.Host, ":") {
+		host, port, err = net.SplitHostPort(r.Host)
+
+		if err != nil {
+			log.Println("[Error] parsing request url:", err.Error())
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			return
+		}
 	}
 
 	rackReq := NewRackRequest(r, host, port)
