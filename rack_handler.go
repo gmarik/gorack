@@ -54,6 +54,7 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("[Error] parsing request url:", err.Error())
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
 	}
 
 	rackReq := NewRackRequest(r, host, port)
@@ -67,6 +68,7 @@ func (s *RackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := resp.WriteTo(w); err != nil {
 		log.Println("[Error] writing response:", err.Error())
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
 	}
 }
 
