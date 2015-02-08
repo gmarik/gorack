@@ -18,6 +18,9 @@
 [x] parse request similarly to rack_response parser in gorack_server.go
 [x] use \0 terminated strings
 
+## Pry
+[ ] make pry work with the server
+
 ## Properly reap child processes in GoRack::Server
 [x] so there's no zombies
 
