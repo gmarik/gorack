@@ -64,19 +64,62 @@ func submit(body string, rackScript string) (string, string, string, error) {
 
 	res, err := http.Post(ts.URL, "text/plain", strings.NewReader(body))
 	if err != nil {
-		t.Error(err)
+		return "", "", "", err
 	}
 
 	got, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
 
-		t.Error(err)
+		return "", "", "", err
 	}
 
 	u, _ := url.Parse(ts.URL)
 
 	host, port, _ := net.SplitHostPort(u.Host)
 
-	return string(got), host, port
+	return string(got), host, port, nil
+}
+
+func BenchmarkRackHandler(b *testing.B) {
+
+	handler := NewRackHandler("./ruby/test/echo.ru")
+
+	if err := handler.StartRackProcess(); err != nil {
+		b.Error(err)
+	}
+
+	ts := httptest.NewServer(handler)
+
+	log.Println(ts.URL)
+
+	defer handler.StopRackProcess()
+	defer ts.Close()
+
+	req := make(chan struct{})
+
+	wg := sync.WaitGroup{}
+
+	for i := 0; i < 10; i += 1 {
+		go func() {
+			for {
+				<-req
+				wg.Add(1)
+
+				body := fmt.Sprintf("test %s", i)
+				_, err := http.Post(ts.URL, "text/plain", strings.NewReader(body))
+				if err != nil {
+					b.Error(err)
+				}
+				wg.Done()
+			}
+		}()
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < 100; i += 1 {
+		req <- struct{}{}
+	}
+	wg.Wait()
 }
