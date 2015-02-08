@@ -17,25 +17,25 @@ var (
 	}
 
 	testRequestString = "" +
-		"REQUEST_METHOD: GET" + delim +
-		"SCRIPT_NAME: " + delim +
-		"PATH_INFO: /path/script.ext" + delim +
-		"QUERY_STRING: query=param1" + delim +
-		"SERVER_NAME: server" + delim +
-		"SERVER_PORT: port" + delim +
 		"HTTP_ACCEPT_ENCODING: gzip, deflate" + delim +
 		"HTTP_ACCEPT_LANGUAGE: da, en-gb; q=0.8, en" + delim +
 		"HTTP_CONNECTION: keep-alive" + delim +
+		"PATH_INFO: /path/script.ext" + delim +
+		"QUERY_STRING: query=param1" + delim +
+		"REQUEST_METHOD: GET" + delim +
+		"SCRIPT_NAME: " + delim +
+		"SERVER_NAME: server" + delim +
+		"SERVER_PORT: port" + delim +
 		delim
 
-	headers = map[string][]string{
+	testHeaders = map[string][]string{
 		"Accept-Encoding": {"gzip, deflate"},
 		"Accept-Language": {"da, en-gb", "q=0.8, en"},
 		"Connection":      {"keep-alive"},
 	}
 )
 
-func TestRackRequestBytesSerialization(t *testing.T) {
+func TestRackRequestHeaderSerialization(t *testing.T) {
 
 	url, err := url.Parse(testUrl)
 
@@ -43,10 +43,15 @@ func TestRackRequestBytesSerialization(t *testing.T) {
 		t.Error(err)
 	}
 
-	r := &http.Request{Method: "GET", URL: url, Header: headers}
+	r := &http.Request{Method: "GET", URL: url, Header: testHeaders}
 
 	testRequest.Request = r
-	got := testRequest.Bytes()
+
+	buf := &bytes.Buffer{}
+
+	testRequest.writeHeaders(buf, testRequest.headers())
+
+	got := buf.Bytes()
 
 	exp := []byte(testRequestString)
 

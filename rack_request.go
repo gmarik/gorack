@@ -1,7 +1,6 @@
 package gorack
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -23,45 +22,48 @@ func NewRackRequest(r *http.Request, serverName, serverPort string) *RackRequest
 	}
 }
 
-func (rr *RackRequest) Bytes() []byte {
-
+func (rr *RackRequest) headers() http.Header {
 	r := rr.Request
 
-	type kval struct{ k, val string }
-
-	items := []kval{
-		{"REQUEST_METHOD", r.Method},
-		{"SCRIPT_NAME", ""}, // TODO: buil properly
-		{"PATH_INFO", r.URL.Path},
-		{"QUERY_STRING", r.URL.RawQuery},
-		{"SERVER_NAME", rr.SERVER_NAME},
-		{"SERVER_PORT", rr.SERVER_PORT},
+	headers := http.Header{
+		"SCRIPT_NAME":    []string{""}, // TODO: build properly
+		"REQUEST_METHOD": []string{r.Method},
+		"PATH_INFO":      []string{r.URL.Path},
+		"QUERY_STRING":   []string{r.URL.RawQuery},
+		"SERVER_NAME":    []string{rr.SERVER_NAME},
+		"SERVER_PORT":    []string{rr.SERVER_PORT},
 	}
+
+	for k, val := range r.Header {
+		headers[http_header(k)] = val
+	}
+
+	return headers
+}
+
+func (rr *RackRequest) writeHeaders(out io.Writer, headers http.Header) error {
 
 	// sort keys so order is predictable
 	keys := make([]string, 0)
-	for k, _ := range r.Header {
+
+	for k, _ := range headers {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	for _, k := range keys {
-		items = append(items, kval{http_header(k), strings.Join(r.Header[k], "; ")})
+	for _, sort_key := range keys {
+		k, val := sort_key, headers[sort_key]
+		fmt.Fprintf(out, "%s: %s%s", k, strings.Join(val, "; "), delim)
 	}
 
-	buf := &bytes.Buffer{}
+	_, err := out.Write([]byte(delim))
 
-	for _, item := range items {
-		buf.WriteString(fmt.Sprintf("%s: %s%s", item.k, item.val, delim))
-	}
-
-	buf.WriteString(delim)
-
-	return buf.Bytes()
+	return err
 }
 
 func (r *RackRequest) WriteTo(w io.WriteCloser) error {
-	if _, err := w.Write(r.Bytes()); err != nil {
+
+	if err := r.writeHeaders(w, r.headers()); err != nil {
 		return err
 	}
 
