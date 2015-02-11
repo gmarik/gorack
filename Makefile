@@ -28,6 +28,7 @@ copyfiles:
 
 binaries:
 	GOARCH=amd64 GOOS=darwin go build -o ${BUILDDIR}/ruby/libexec/darwin_gorack main/gorack-server.go
+	# GOARCH=amd64 GOOS=linux go build -o ${BUILDDIR}/ruby/libexec/linux_gorack main/gorack-server.go
 
 # target: gemfile - builds gemfile from gemspec
 gemfile: build
