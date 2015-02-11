@@ -5,7 +5,8 @@
 
 # Current state
 
-*alpha quality*
+1. *alpha quality*
+2. Gem file ships with only Darwin amd64 prebuilt binary. Why? See 1. Feel free to submit PRs for other OSes and ARCHes
 
 # Why
 
@@ -42,6 +43,7 @@ Requires [Go] installed. Developed with 1.4 version
 
 [x] fix weird zombie leaking
 [ ] improve error handling: broken IPC results in malfunction of the parent ruby process
+[ ] improve performance
 
 
 [Go]: http://golang.org
