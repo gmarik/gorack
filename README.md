@@ -33,8 +33,8 @@ Builds gem file
 ## Testing
 
 1. cd gorack/
-2. go test .
-3. go test -bench=. .
+2. go test -v .
+3. go test -v -bench=. . # benchmarking
 
 Requires [Go] installed. Developed with 1.4 version
 
