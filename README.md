@@ -9,7 +9,7 @@
 
 # Why
 
-An experiment; inspired by [nodejs]' [nack]
+An experiment; inspired by [node]'s [nack]
 
 # How To
 ## Get Up And Running
@@ -34,19 +34,18 @@ Builds gem file
 
 1. cd gorack/
 2. go test .
+3. go test -bench=. .
 
 Requires [Go] installed. Developed with 1.4 version
 
 ## TODO
 
-[ ] improve error handling: broken IPC results in malfunction of the whole thing
-[ ] fix weird zombie leaking: running `go test .` leaks zombie processes
-    inspect: `\ps -o ppid,state,command|grep 'Z '`
-    kill: `\ps -o ppid,state,command|grep 'Z '|cut -f1 -d' '|xargs kill`
+[x] fix weird zombie leaking
+[ ] improve error handling: broken IPC results in malfunction of the parent ruby process
 
 
 [Go]: http://golang.org
 [gorack]: http://github.com/gmarik/gorack
 [nack]: http://github.com/josh/nack
 [Rack]: http://rack.github.io
-[nodejs]: http://nodejs.org
+[node]: http://nodejs.org
