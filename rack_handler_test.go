@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -81,6 +82,8 @@ func submit(body string, rackScript string) (string, string, string, error) {
 
 func BenchmarkRackHandler(b *testing.B) {
 
+	// runtime.GOMAXPROCS(2)
+
 	handler := NewRackHandler("./ruby/test/echo.ru")
 
 	if err := handler.StartRackProcess(); err != nil {
@@ -94,30 +97,43 @@ func BenchmarkRackHandler(b *testing.B) {
 	defer handler.StopRackProcess()
 	defer ts.Close()
 
-	req := make(chan struct{})
+	req := make(chan int)
 
 	wg := sync.WaitGroup{}
 
-	for i := 0; i < 10; i += 1 {
-		go func() {
-			for {
-				<-req
-				wg.Add(1)
+	worker := func(i int) {
+		for rn := range req {
+			wg.Add(1)
 
-				body := fmt.Sprintf("test %s", i)
-				_, err := http.Post(ts.URL, "text/plain", strings.NewReader(body))
-				if err != nil {
-					b.Error(err)
-				}
-				wg.Done()
+			body := fmt.Sprintf("worker %d:%d", i, rn)
+			// log.Println(body)
+			_, err := http.Post(ts.URL, "text/plain", strings.NewReader(body))
+			if err != nil {
+				b.Error(err)
 			}
-		}()
+			wg.Done()
+		}
+	}
+
+	for i := 0; i < 10; i += 1 {
+		go worker(i)
 	}
 
 	b.ResetTimer()
 
-	for i := 0; i < 100; i += 1 {
-		req <- struct{}{}
+	printed := true
+	for i := 0; i < 100; {
+		select {
+		case req <- i:
+			i += 1
+			printed = false
+		default:
+			if !printed {
+				log.Println("Waiting")
+				printed = true
+			}
+			runtime.Gosched()
+		}
 	}
 	wg.Wait()
 }
