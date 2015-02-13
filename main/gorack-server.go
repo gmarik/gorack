@@ -6,13 +6,21 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/gmarik/gorack"
 )
 
 func main() {
 
-	gorack.GoRackExec = path.Join(path.Dir(os.Args[0]), "gorack-ruby")
+	// HACK: this is a hack to make possible to `go run main/gorack-server.go`
+	// it works because:
+	// 1. GoRackExec remains default and points to ./ruby/libexec/gorack-ruby
+	// 2. binaries in gem file are called gorack_${GOOS}
+	// TODO: come up with proper solution
+	if filepath.Base(os.Args[0]) != "gorack-server" {
+		gorack.GoRackExec = path.Join(path.Dir(os.Args[0]), "gorack-ruby")
+	}
 
 	var (
 		config_path    *string = flag.String("config", "./config.ru", "rack config file")
