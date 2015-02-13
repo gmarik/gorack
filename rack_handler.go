@@ -12,7 +12,7 @@ import (
 	"github.com/gmarik/gorack/ipcio"
 )
 
-var GorackRunner = "./ruby/libexec/gorack"
+var GorackRunner = "./ruby/libexec/gorack-ruby"
 
 type RackHandler struct {
 	local_fd   int

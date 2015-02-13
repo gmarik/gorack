@@ -46,8 +46,6 @@ func TestRackHandler(t *testing.T) {
 }
 
 func submit(body string, rackScript string) (string, string, string, error) {
-	// package variable
-	GorackRunner = "./ruby/libexec/gorack"
 
 	handler := NewRackHandler(rackScript)
 

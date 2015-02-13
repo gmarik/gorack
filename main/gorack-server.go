@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-	gorack.GorackRunner = path.Join(path.Dir(os.Args[0]), "gorack")
+	gorack.GorackRunner = path.Join(path.Dir(os.Args[0]), "gorack-ruby")
 
 	var (
 		config_path    *string = flag.String("config", "./config.ru", "rack config file")
