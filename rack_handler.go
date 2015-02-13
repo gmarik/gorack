@@ -12,7 +12,7 @@ import (
 	"github.com/gmarik/gorack/ipcio"
 )
 
-var GorackRunner = "./ruby/libexec/gorack-ruby"
+var GoRackExec = "./ruby/libexec/gorack-ruby"
 
 type RackHandler struct {
 	local_fd   int
@@ -32,7 +32,7 @@ func NewRackHandler(configPath string) *RackHandler {
 	// child process' FDs start from 3 (0, 1, 2)
 	fd := os.NewFile(uintptr(remote), "master_io")
 
-	cmd := exec.Command(GorackRunner, configPath)
+	cmd := exec.Command(GoRackExec, configPath)
 	cmd.ExtraFiles = []*os.File{fd}
 
 	return &RackHandler{
