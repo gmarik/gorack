@@ -6,14 +6,39 @@
 # Current state
 
 1. *alpha quality*
-2. Gem file ships with only Darwin amd64 prebuilt binary. Why? See 1. Feel free to submit PRs for other OSes and ARCHes
+2. Gem file ships with only Darwin amd64 prebuilt binary. Why? See 1.
 
 # Why
 
 An experiment; inspired by [node]'s [nack]
 
 # How To
+## Building from sources
+
+0. export GORACKPATH=$GOPATH/src/github.com/gmarik
+1. mkdir -p $GORACKPATH
+2. git clone http://github.com/gmarik/gorack $GORACKPATH
+3. cd $GORACKPATH
+4. go run main/gorack-server.go -config ./ruby/test/echo.ru
+5. open http://localhost:3000
+
+
+## Building Gemfile
+
+0. cd $GORACKPATH
+1. make gemfile # builds to ./build/ruby/gorack-x.x.x.gem
+
+
+## Testing
+
+0. cd $GORACKPATH
+1. go test -v .
+2. go test -v -bench=. . # with benchmarking
+
+
 ## Get Up And Running
+
+NOTE: gem provides only for x86_64 OSX binary at the moment. See instructions how to build from source
 
 1. `gem install gorack`
 2. `gorack -config ./path/to/config.ru` 
@@ -23,21 +48,6 @@ ie:
 1. `gorack -config=$(dirname $(gem which gorack))/../test/echo.ru`
 2. `open http://localhost:3000`
 
-## Develop
-
-1. git clone http://github.com/gmarik/gorack
-2. cd gorack
-3. make
-
-Builds gem file
-
-## Testing
-
-1. cd gorack/
-2. go test -v .
-3. go test -v -bench=. . # benchmarking
-
-Requires [Go] installed. Developed with 1.4 version
 
 ## TODO
 
