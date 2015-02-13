@@ -1,6 +1,6 @@
 # Gorack
 
-[gorack] is a [Go] backed fronted webserver for Ruby's [Rack] applications
+[gorack] is a [Go] backed frontend webserver for Ruby's [Rack] applications
 
 
 # Current state
