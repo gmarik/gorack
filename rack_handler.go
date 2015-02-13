@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/gmarik/gorack/ipcio"
@@ -15,9 +16,9 @@ import (
 var GoRackExec = "./ruby/libexec/gorack-ruby"
 
 type RackHandler struct {
-	local_fd   int
-	configPath string
-	cmd        *exec.Cmd
+	local_fd int
+	cmd      *exec.Cmd
+	sync.Locker
 }
 
 func NewRackHandler(configPath string) *RackHandler {
@@ -36,9 +37,9 @@ func NewRackHandler(configPath string) *RackHandler {
 	cmd.ExtraFiles = []*os.File{fd}
 
 	return &RackHandler{
-		local_fd:   local,
-		configPath: configPath,
-		cmd:        cmd,
+		local_fd: local,
+		cmd:      cmd,
+		Locker:   new(sync.Mutex),
 	}
 }
 
@@ -92,6 +93,7 @@ func (s *RackHandler) sendIo() (*os.File, *os.File, error) {
 		return nil, nil, err
 	}
 
+	s.Lock()
 	if err = ipcio.SendIo(s.local_fd, req_reader); err != nil {
 		return nil, nil, err
 	}
@@ -99,6 +101,7 @@ func (s *RackHandler) sendIo() (*os.File, *os.File, error) {
 	if err = ipcio.SendIo(s.local_fd, res_writer); err != nil {
 		return nil, nil, err
 	}
+	s.Unlock()
 
 	// close pipes once FDs sent to a child process
 	// they'll still be open in the child process
