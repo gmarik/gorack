@@ -3,7 +3,7 @@
 [gorack] is a [Go] backed frontend webserver for Ruby's [Rack] applications
 
 
-# Current state
+## Current state
 
 1. *alpha quality*
 2. Gem file ships with only Darwin amd64 prebuilt binary. Why? See 1.
