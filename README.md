@@ -51,9 +51,9 @@ ie:
 
 ## TODO
 
-[x] fix weird zombie leaking
-[ ] improve error handling: broken IPC results in malfunction of the parent ruby process
-[ ] improve performance
+- [x] fix weird zombie leaking
+- [ ] improve error handling: broken IPC results in malfunction of the parent ruby process
+- [ ] improve performance
 
 
 [Go]: http://golang.org
