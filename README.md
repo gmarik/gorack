@@ -15,25 +15,25 @@ An experiment; inspired by [node]'s [nack]
 # How To
 ## Building from sources
 
-0. export GORACKPATH=$GOPATH/src/github.com/gmarik
-1. mkdir -p $GORACKPATH
-2. git clone http://github.com/gmarik/gorack $GORACKPATH
-3. cd $GORACKPATH
-4. go run main/gorack-server.go -config ./ruby/test/echo.ru
-5. open http://localhost:3000
+0. `export GORACKPATH=$GOPATH/src/github.com/gmarik`
+1. `mkdir -p $GORACKPATH`
+2. `git clone http://github.com/gmarik/gorack $GORACKPATH`
+3. `cd $GORACKPATH`
+4. `go run main/gorack-server.go -config ./ruby/test/echo.ru`
+5. `open http://localhost:3000`
 
 
 ## Building Gemfile
 
-0. cd $GORACKPATH
-1. make gemfile # builds to ./build/ruby/gorack-x.x.x.gem
+0. `cd $GORACKPATH`
+1. `make gemfile # builds to ./build/ruby/gorack-x.x.x.gem`
 
 
 ## Testing
 
-0. cd $GORACKPATH
-1. go test -v .
-2. go test -v -bench=. . # with benchmarking
+0. `cd $GORACKPATH`
+1. `go test -v .`
+2. `go test -v -bench=. . # with benchmarking`
 
 
 ## Get Up And Running
